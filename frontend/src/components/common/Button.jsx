@@ -1,25 +1,27 @@
 // src/components/common/Button.jsx
 import React from "react";
+import PropTypes from "prop-types";
 
-const VARIANT_CLASSES = {
+// Adaptation avec les variables CSS définies dans :root de index.css
+const VARIANT = {
   primary: [
-    "bg-primary-dark",
+    "bg-[var(--color-primary-dark)]",
     "text-white",
-    "hover:bg-lis-blue",
-    "focus:ring-lis-blue",
+    "hover:bg-[var(--color-lis-blue)]",
+    "focus:ring-[var(--color-lis-blue)]",
   ],
   secondary: [
-    "bg-background",
-    "text-primary-dark",
-    "hover:bg-accent-light",
-    "focus:ring-accent-light",
+    "bg-[var(--color-background)]",
+    "text-[var(--color-primary-dark)]",
+    "hover:bg-[var(--color-accent-light)]",
+    "focus:ring-[var(--color-accent-light)]",
   ],
 };
 
 export default function Button({
   variant = "primary",
-  children,
   className = "",
+  children,
   ...props
 }) {
   const base = [
@@ -39,15 +41,19 @@ export default function Button({
     "focus:ring-offset-2",
   ];
 
-  const variantClasses = VARIANT_CLASSES[variant] || VARIANT_CLASSES.primary;
-
-  const allClasses = [...base, ...variantClasses, className]
+  const classes = [...base, ...(VARIANT[variant] || VARIANT.primary), className]
     .filter(Boolean)
     .join(" ");
 
   return (
-    <button className={allClasses} {...props}>
+    <button className={classes} {...props}>
       {children}
     </button>
   );
 }
+
+Button.propTypes = {
+  variant: PropTypes.oneOf(["primary", "secondary"]),
+  className: PropTypes.string,
+  children: PropTypes.node.isRequired,
+};

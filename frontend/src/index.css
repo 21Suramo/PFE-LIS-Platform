@@ -1,3 +1,8 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+:root {
+  --color-background: #f8f9fa;
+  --color-primary-dark: #003366;
+  --color-lis-blue: #1a237e;
+  --color-accent-light: #d6eaf8;
+}
