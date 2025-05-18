@@ -1,5 +1,7 @@
 @import "tailwindcss";
-
+@layer theme, base, components, utilities;
+@import "tailwindcss/preflight.css" layer(base);
+@import "tailwindcss/utilities.css" layer(utilities);
 :root {
   --color-background: #f8f9fa;
   --color-primary-dark: #003366;
