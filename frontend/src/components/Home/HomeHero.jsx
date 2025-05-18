@@ -1,7 +1,8 @@
+// src/Home/HomeHero.jsx
 import React from "react";
 import { motion } from "framer-motion";
 import heroImage from "../../assets/images/hero-lis.webp";
-console.log("heroImage path:", heroImage);
+
 export default function HomeHero() {
   // Scroll vers le menu
   const handleScrollToMenu = () => {
@@ -16,7 +17,7 @@ export default function HomeHero() {
       className="relative w-full h-[calc(100vh-180px)] bg-cover bg-center bg-no-repeat"
       style={{ backgroundImage: `url(${heroImage})` }}>
       {/* Overlay sombre */}
-      <div className="absolute inset-0 bg-black bg-opacity-50 flex flex-col items-center justify-center px-4 text-center">
+      <div className="absolute inset-0 bg-gradient-to-br bg-black from-indigo-900/40 via-black/40 to-transparent backdrop-blur-sm flex flex-col items-center justify-center px-4 text-center">
         {/* Titre principal */}
         <motion.h1
           initial={{ opacity: 0, y: -20 }}
@@ -54,8 +55,8 @@ export default function HomeHero() {
           transition={{ delay: 0.8, duration: 0.6 }}
           onClick={handleScrollToMenu}
           className="bg-[var(--color-lis-blue)] text-white py-3 px-6 rounded text-base sm:text-lg 
-            hover:bg-[var(--color-primary-dark)] transition duration-300 shadow-md hover:shadow-lg">
-          Découvrir nos services
+            hover:bg-[var(--color-primary-dark)] transition duration-300 shadow-md hover:shadow-lg ">
+          Découvrir plus
         </motion.button>
       </div>
     </section>
