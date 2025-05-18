@@ -1,4 +1,5 @@
 // src/components/common/Header.jsx
+
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
@@ -12,7 +13,7 @@ export default function Header() {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  // Accessibilité : fermeture de la sidebar avec Echap
+  // Fermeture du menu avec Échap
   useEffect(() => {
     function handleKeyDown(e) {
       if (e.key === "Escape" && isMenuOpen) setIsMenuOpen(false);
@@ -24,15 +25,9 @@ export default function Header() {
   return (
     <>
       <header
-        className={`
-          bg-[var(--color-background)] shadow-sm
-          h-[80px] sm:h-[100px]
-          flex items-center justify-between
-          px-4 sm:px-8 lg:px-12
-          sticky top-0 z-50
-        `}
+        className="bg-background shadow-sm h-[80px] sm:h-[100px] px-4 sm:px-8 lg:px-12 flex items-center justify-between sticky top-0 z-50"
         role="banner">
-        {/* Menu */}
+        {/* Bouton menu */}
         <Button
           variant="primary"
           aria-label="Ouvrir le menu"
@@ -42,17 +37,12 @@ export default function Header() {
           ☰ Menu
         </Button>
 
-        {/* Logo centré animé */}
+        {/* Logo animé */}
         <Link to="/" aria-label="Accueil" className="flex items-center">
           <img
             src={logo}
-            alt="Logo Université Hassan II / FSAC"
-            className="
-              h-[48px] sm:h-[60px]
-              max-w-[140px] object-contain
-              drop-shadow-md
-              animate-zoom-in-out
-            "
+            alt="Logo LIS"
+            className="h-[48px] sm:h-[60px] max-w-[140px] object-contain drop-shadow-md animate-zoom-in-out"
           />
         </Link>
 
@@ -75,7 +65,7 @@ export default function Header() {
         onClose={() => setIsMenuOpen(false)}
       />
 
-      {/* Login Modal */}
+      {/* Fenêtre modale de connexion */}
       <LoginModal isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
     </>
   );

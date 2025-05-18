@@ -16,17 +16,18 @@ export default function Sidebar({ isOpen, onClose }) {
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* Overlay sombre */}
+          {/* Overlay flouté */}
           <motion.div
-            className="fixed inset-0 bg-black bg-opacity-50 z-40"
+            className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40"
             onClick={onClose}
             initial={{ opacity: 0 }}
-            animate={{ opacity: 0.5 }}
+            animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           />
 
-          {/* Sidebar glissante */}
+          {/* Menu latéral */}
           <motion.aside
+            id="sidebar"
             className="fixed top-0 left-0 w-64 h-full bg-background shadow-xl z-50 p-5 flex flex-col"
             initial={{ x: "-100%" }}
             animate={{ x: 0 }}
@@ -42,7 +43,7 @@ export default function Sidebar({ isOpen, onClose }) {
               <XIcon className="w-6 h-6" />
             </button>
 
-            {/* Navigation */}
+            {/* Liens de navigation */}
             <nav className="flex flex-col gap-4 text-sm font-medium text-primary-dark">
               <SidebarLink to="/" icon={<HomeIcon />} label="Accueil" />
               <SidebarLink to="/teams" icon={<UsersIcon />} label="Équipes" />
@@ -69,14 +70,12 @@ export default function Sidebar({ isOpen, onClose }) {
   );
 }
 
-// ✅ Sous-composant pour les liens du menu
 function SidebarLink({ to, icon, label }) {
   return (
     <Link
       to={to}
       className="flex items-center gap-2 px-2 py-2 rounded hover:bg-accentLight hover:text-lisBlue transition"
-      onClick={() => window.scrollTo(0, 0)} // pour scroll top sur clic
-    >
+      onClick={() => window.scrollTo(0, 0)}>
       {icon}
       <span>{label}</span>
     </Link>
