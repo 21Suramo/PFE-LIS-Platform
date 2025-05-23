@@ -1,5 +1,5 @@
-// src/contexts/AuthContext.jsx
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect } from "react";
+import { mockUtilisateurs } from "../data/mockData";
 
 const AuthContext = createContext({
   user: null,
@@ -12,29 +12,41 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Au montage, on peut vérifier un user/token stocké
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
+    const storedUser = localStorage.getItem("user");
     if (storedUser) {
       setUser(JSON.parse(storedUser));
     }
     setLoading(false);
   }, []);
 
-  // Mock de login : on stocke un user dans localStorage
-  const login = (role = 'MEMBRE') => {
+  // Correction du mock login : recherche dans le mock par email (ou rôle pour dev)
+  const login = (emailOrRole = "membre@lis.ma", password) => {
     setLoading(true);
     setTimeout(() => {
-      const mockUser = { id: 1, name: 'Test User', role };
-      localStorage.setItem('user', JSON.stringify(mockUser));
-      setUser(mockUser);
+      // Trouver l'utilisateur dans le mock
+      let utilisateur;
+      // 1. Si email, cherche par email
+      if (emailOrRole.includes("@")) {
+        utilisateur = mockUtilisateurs.find((u) => u.email === emailOrRole);
+      } else {
+        // 2. Sinon, prend le premier utilisateur du rôle voulu
+        utilisateur = mockUtilisateurs.find(
+          (u) => u.role === emailOrRole.toUpperCase()
+        );
+      }
+      if (utilisateur) {
+        localStorage.setItem("user", JSON.stringify(utilisateur));
+        setUser(utilisateur);
+      } else {
+        setUser(null);
+      }
       setLoading(false);
     }, 500);
   };
 
-  // Logout : on supprime le user stocké
   const logout = () => {
-    localStorage.removeItem('user');
+    localStorage.removeItem("user");
     setUser(null);
   };
 
@@ -45,7 +57,6 @@ export function AuthProvider({ children }) {
   );
 }
 
-// Hook pour consommer facilement le contexte
 export function useAuth() {
   return useContext(AuthContext);
 }

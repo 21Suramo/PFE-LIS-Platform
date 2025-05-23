@@ -1,82 +1,82 @@
+import React, { useState } from "react";
 import { mockUtilisateurs, mockArticles } from "../../data/mockData";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function TeamDetail({ team }) {
-  // Récupérer leader (responsable)
-  const leader = mockUtilisateurs.find((u) => u.id === team.leaderId);
+  const [selectedArticle, setSelectedArticle] = useState(null);
+  const [showProjects, setShowProjects] = useState(false);
 
-  // Récupérer les membres (objets)
+  const leader = mockUtilisateurs.find((u) => u.id === team.leaderId);
   const membres = team.membres
     .map((id) => mockUtilisateurs.find((u) => u.id === id))
     .filter(Boolean);
-
-  // Récupérer les articles (objets)
   const articles = (team.articles || [])
     .map((id) => mockArticles.find((a) => a.id === id))
     .filter(Boolean);
 
   return (
     <div className="space-y-8">
+      {/* En-tête et leader */}
       <div className="text-center">
         <img
           src={team.imageUrl}
           alt={team.nom}
-          className="w-full max-h-64 object-cover rounded-xl shadow"
+          className="w-full max-h-56 object-cover rounded-xl shadow"
         />
-        <h1 className="text-3xl font-bold text-lisBlue mt-6">{team.nom}</h1>
+        <h1 className="text-2xl font-bold text-lisBlue mt-4">{team.nom}</h1>
         {leader && (
           <div className="mt-2 flex items-center justify-center gap-2">
             <img
               src={leader.avatar}
               alt={leader.nom}
-              className="w-9 h-9 rounded-full border object-cover"
+              className="w-10 h-10 rounded-full border object-cover"
             />
             <span className="text-gray-700 font-medium">{leader.nom}</span>
             <span className="text-xs text-gray-500">({leader.speciality})</span>
           </div>
         )}
+        <div className="mt-2 text-sm text-gray-500">{team.specialite}</div>
       </div>
+
+      {/* Description */}
       <div>
-        <h2 className="text-xl font-semibold text-gray-800">🧾 Description</h2>
-        <p className="text-gray-700 mt-2">
-          {team.objectif || team.description}
-        </p>
+        <h2 className="text-lg font-semibold text-gray-800 mb-1">
+          🧾 Description
+        </h2>
+        <p className="text-gray-700">{team.objectif || team.description}</p>
       </div>
+
+      {/* Membres : carrousel horizontal */}
       <div>
-        <h2 className="text-xl font-semibold text-gray-800">👥 Membres</h2>
-        <ul className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <h2 className="text-lg font-semibold text-gray-800 mb-1">👥 Membres</h2>
+        <div className="flex gap-3 overflow-x-auto pb-2">
           {membres.length ? (
             membres.map((member) => (
-              <li
+              <div
                 key={member.id}
-                className="bg-gray-100 p-3 rounded shadow-sm flex items-center gap-3">
+                className="min-w-[180px] bg-gray-100 p-3 rounded shadow-sm flex items-center gap-3">
                 <img
                   src={member.avatar}
                   alt={member.nom}
                   className="w-8 h-8 rounded-full object-cover border"
                 />
-                <span className="font-medium">{member.nom}</span>
-                <span className="text-xs text-gray-500">
-                  {member.speciality}
-                </span>
-              </li>
+                <div>
+                  <span className="font-medium">{member.nom}</span>
+                  <div className="text-xs text-gray-500">
+                    {member.speciality}
+                  </div>
+                </div>
+              </div>
             ))
           ) : (
-            <li className="italic text-gray-500">Aucun membre enregistré.</li>
+            <div className="italic text-gray-500">Aucun membre enregistré.</div>
           )}
-        </ul>
-      </div>
-      {team.projects && (
-        <div>
-          <h2 className="text-xl font-semibold text-gray-800">🚀 Projets</h2>
-          <ul className="mt-2 list-disc list-inside text-gray-700">
-            {team.projects.map((project, index) => (
-              <li key={index}>{project}</li>
-            ))}
-          </ul>
         </div>
-      )}
+      </div>
+
+      {/* Articles : clic = mini-modal */}
       <div>
-        <h2 className="text-xl font-semibold text-gray-800">
+        <h2 className="text-lg font-semibold text-gray-800 mb-1">
           📄 Articles publiés
         </h2>
         {articles.length > 0 ? (
@@ -84,12 +84,12 @@ export default function TeamDetail({ team }) {
             {articles.map((article) => (
               <li
                 key={article.id}
-                className="bg-white p-3 border rounded shadow-sm text-gray-700">
+                className="bg-white p-3 border rounded shadow-sm text-gray-700 cursor-pointer hover:bg-gray-50 transition"
+                onClick={() => setSelectedArticle(article)}>
                 <p className="font-medium">{article.titre}</p>
                 <p className="text-xs text-gray-500 mt-1">
                   📅 {article.dateSoumission}
                 </p>
-                <p className="text-xs text-gray-600 mt-1">{article.resume}</p>
                 <span
                   className={`inline-block text-xs px-2 py-1 rounded ml-2 ${article.statut === "APPROVED" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}>
                   {article.statut}
@@ -103,6 +103,91 @@ export default function TeamDetail({ team }) {
           </p>
         )}
       </div>
+
+      {/* Mini-modal détail article */}
+      <AnimatePresence>
+        {selectedArticle && (
+          <motion.div
+            className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setSelectedArticle(null)}>
+            <motion.div
+              className="bg-white rounded-xl shadow-lg max-w-lg w-full p-6 relative"
+              initial={{ scale: 0.93, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}>
+              <button
+                onClick={() => setSelectedArticle(null)}
+                className="absolute top-3 right-4 text-xl text-gray-600 hover:text-lisBlue"
+                aria-label="Fermer">
+                &times;
+              </button>
+              <h3 className="text-xl font-bold">{selectedArticle.titre}</h3>
+              <div className="text-xs text-gray-500 mb-2">
+                {selectedArticle.dateSoumission}
+              </div>
+              <div className="mt-2">
+                {selectedArticle.contenu || selectedArticle.resume}
+              </div>
+              <div className="mt-3 text-sm">
+                Statut :{" "}
+                <span
+                  className={`px-2 py-1 rounded ${selectedArticle.statut === "APPROVED" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}>
+                  {selectedArticle.statut}
+                </span>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Bouton/Modal Projets */}
+      {team.projects && team.projects.length > 0 && (
+        <div>
+          <button
+            className="bg-lisBlue text-white px-4 py-2 rounded-full mt-6 hover:bg-blue-900 transition"
+            onClick={() => setShowProjects(true)}>
+            Voir tous les projets
+          </button>
+          <AnimatePresence>
+            {showProjects && (
+              <motion.div
+                className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setShowProjects(false)}>
+                <motion.div
+                  className="bg-white rounded-xl shadow-lg max-w-lg w-full p-8 relative"
+                  initial={{ scale: 0.93, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.95, opacity: 0 }}
+                  onClick={(e) => e.stopPropagation()}>
+                  <button
+                    onClick={() => setShowProjects(false)}
+                    className="absolute top-3 right-4 text-xl text-gray-600 hover:text-lisBlue"
+                    aria-label="Fermer">
+                    &times;
+                  </button>
+                  <h3 className="text-2xl font-bold mb-4 text-lisBlue">
+                    Projets de l'équipe
+                  </h3>
+                  <ul className="list-disc list-inside space-y-2">
+                    {team.projects.map((project, i) => (
+                      <li key={i} className="text-gray-800">
+                        {project}
+                      </li>
+                    ))}
+                  </ul>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      )}
     </div>
   );
 }
