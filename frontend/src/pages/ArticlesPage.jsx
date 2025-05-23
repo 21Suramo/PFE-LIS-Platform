@@ -1,30 +1,13 @@
-// src/pages/ArticlesPage.jsx
-import React, { useState, useEffect } from 'react';
-import Layout from '../components/common/Layout';
-import ArticleList from '../components/Article/ArticleList';
-import ArticleForm from '../components/Article/ArticleForm';
+import React, { useState } from "react";
+import Layout from "../components/common/Layout";
+import ArticleList from "../components/Article/ArticleList";
+import ArticleForm from "../components/Article/ArticleForm";
+import { mockArticles } from "../data/mockData";
 
 export default function ArticlesPage() {
-  const [articles, setArticles] = useState([]);
+  // Permettre d'ajouter dynamiquement (optionnel) :
+  const [articles, setArticles] = useState(mockArticles);
   const [showForm, setShowForm] = useState(false);
-
-  useEffect(() => {
-    // Mock temporaire ; plus tard remplacer par articleService.getAll()
-    setArticles([
-      {
-        id: 'a1',
-        title: 'Optimisation des flux temps réel',
-        status: 'PENDING',
-        author: 'Alice'
-      },
-      {
-        id: 'a2',
-        title: 'Apprentissage profond pour l’IRM',
-        status: 'APPROVED',
-        author: 'Bob'
-      }
-    ]);
-  }, []);
 
   const handleSubmit = (newArticle) => {
     setArticles([newArticle, ...articles]);
@@ -40,14 +23,11 @@ export default function ArticlesPage() {
           </h1>
           <button
             onClick={() => setShowForm(!showForm)}
-            className="mt-4 sm:mt-0 bg-lisBlue text-white py-2 px-4 rounded"
-          >
-            {showForm ? 'Annuler' : 'Nouvel article'}
+            className="mt-4 sm:mt-0 bg-lisBlue text-white py-2 px-4 rounded">
+            {showForm ? "Annuler" : "Nouvel article"}
           </button>
         </div>
-
         {showForm && <ArticleForm onSubmit={handleSubmit} />}
-
         <ArticleList articles={articles} />
       </div>
     </Layout>

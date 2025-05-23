@@ -1,28 +1,25 @@
-// src/pages/AdminDashboardPage.jsx
-import React, { useState, useEffect } from 'react';
-import Layout from '../components/common/Layout';
-import StatsCard from '../components/Dashboard/StatsCard';
-import Charts from '../components/Dashboard/Charts';
-import { useAuth } from '../contexts/AuthContext';
+import React from "react";
+import Layout from "../components/common/Layout";
+import StatsCard from "../components/Dashboard/StatsCard";
+import Charts from "../components/Dashboard/Charts";
+import { useAuth } from "../contexts/AuthContext";
+import {
+  mockEquipes,
+  mockUtilisateurs,
+  mockArticles,
+  mockEvenements,
+} from "../data/mockData";
 
 export default function AdminDashboardPage() {
   const { user } = useAuth();
-  const [stats, setStats] = useState({
-    totalTeams: 0,
-    totalMembers: 0,
-    pendingArticles: 0,
-    upcomingEvents: 0,
-  });
 
-  useEffect(() => {
-    // Mock temporaire ; remplacer par appels API
-    setStats({
-      totalTeams: 3,
-      totalMembers: 12,
-      pendingArticles: 5,
-      upcomingEvents: 2,
-    });
-  }, []);
+  // Calculs dynamiques à partir du mock
+  const stats = {
+    totalTeams: mockEquipes.length,
+    totalMembers: mockUtilisateurs.length,
+    pendingArticles: mockArticles.filter((a) => a.statut === "PENDING").length,
+    upcomingEvents: mockEvenements.length,
+  };
 
   return (
     <Layout>
@@ -30,19 +27,23 @@ export default function AdminDashboardPage() {
         <h1 className="text-3xl sm:text-4xl font-bold text-primaryDark">
           Tableau de bord Administrateur
         </h1>
-
         {/* Statistiques rapides */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <StatsCard label="Équipes" value={stats.totalTeams} />
           <StatsCard label="Membres" value={stats.totalMembers} />
-          <StatsCard label="Articles en attente" value={stats.pendingArticles} />
+          <StatsCard
+            label="Articles en attente"
+            value={stats.pendingArticles}
+          />
           <StatsCard label="Événements à venir" value={stats.upcomingEvents} />
         </div>
-
         {/* Graphiques (ex. articles par équipe) */}
         <div className="space-y-6">
           <Charts title="Articles par équipe" dataKey="articlesByTeam" />
-          <Charts title="Participation aux événements" dataKey="eventParticipation" />
+          <Charts
+            title="Participation aux événements"
+            dataKey="eventParticipation"
+          />
         </div>
       </div>
     </Layout>

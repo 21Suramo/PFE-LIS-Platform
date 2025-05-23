@@ -1,5 +1,6 @@
 import TeamCard from "./TeamCard";
 
+// Ajoute onOpenMembers, onOpenArticles si besoin d’ouverture de modal dans TeamCard
 export default function TeamList({ teams, onOpenMembers, onOpenArticles }) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
