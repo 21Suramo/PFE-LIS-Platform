@@ -1,12 +1,14 @@
-// src/components/Article/ArticleList.jsx
-import React from 'react';
-import ArticleCard from './ArticleCard';
+import ArticleCard from "./ArticleCard";
 
-export default function ArticleList({ articles }) {
+export default function ArticleList({ articles, onOpenDetails }) {
   return (
-    <div className="space-y-4">
-      {articles.map((art) => (
-        <ArticleCard key={art.id} article={art} />
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      {articles.map((article) => (
+        <ArticleCard
+          key={article.id}
+          article={article}
+          onOpenDetails={onOpenDetails}
+        />
       ))}
     </div>
   );
