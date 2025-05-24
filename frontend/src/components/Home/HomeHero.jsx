@@ -69,7 +69,7 @@ export default function HomeHero() {
       </div>
 
       {/* Sidebar */}
-      <Sidebar isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
+      <Sidebar isOpen={isMenuOpen} onClose={() => setIsMenuOpen(true)} />
     </section>
   );
 }
