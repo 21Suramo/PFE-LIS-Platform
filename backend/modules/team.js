@@ -7,9 +7,15 @@ const teamSchema = new mongoose.Schema({
   name : { type: String, required: true },
   description: { type: String, required: true },
   objectifs: { type: String, required: false },
-  dateCreation: Date,
+  specialite: { type: String, required: true }, 
+  imageUrl: { type: String, required: false }, 
+  leader: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  dateCreation: { type: Date, default: Date.now },
   membres: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
-  axeRecherche: { type: mongoose.Schema.Types.ObjectId, ref: 'AxeRecherche' }
+  article: { type: mongoose.Schema.Types.ObjectId, ref: "Article" },
+  leader: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // ✅ new
+  imageUrl: { type: String }, // ✅ new
+
 });
 
 

@@ -4,7 +4,7 @@ const Schema = mongoose.Schema;
 // This schema defines the structure of the axeRecherche documents in the MongoDB collection
 
 const axeRechercheSchema = new mongoose.Schema({
-  titre: { type: String, required: false },
+  titre: { type: String, required: true },
   description: { type: String, required: false },
   dateCreation: { type: Date, default: Date.now },
   equipes: [{

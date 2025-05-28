@@ -7,7 +7,6 @@ const labSchema = new mongoose.Schema({
   nom: { type: String, required: true }, // Title of the Lab, required field that verifies the title value 
   discription: { type: String, required: true },
   createdAt: { type: Date, default: Date.now },// Date when the Lab was created, defaults to the current date
-  equipe: { type: mongoose.Schema.Types.ObjectId, ref: 'Team' }
 });
 
 

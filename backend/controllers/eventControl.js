@@ -1,13 +1,45 @@
-const Event = require('../modules/event'); // Import the Event model
+const Event = require('../modules/event');
 
-
-// Create event
+// Create event with uploaded image
 exports.createEvent = async (req, res) => {
   try {
-    const newEvent = new Event(req.body);
+    const {
+      title,
+      description,
+      date,
+      location,
+      eventType,
+      format,
+      streamingUrl,
+      origine,
+    } = req.body;
+
+    // Required fields validation
+    if (!title || !description || !date || !eventType || !format || !origine) {
+      return res
+        .status(400)
+        .json({ message: 'Missing required fields for event creation.' });
+    }
+
+    // Get uploaded file path if available
+    const image = req.file ? `/uploads/${req.file.filename}` : "";
+
+    const newEvent = new Event({
+      title,
+      description,
+      date,
+      location,
+      eventType,
+      format,
+      streamingUrl,
+      origine,
+      image,
+    });
+
     await newEvent.save();
     res.status(201).json({ message: 'Event created successfully!', event: newEvent });
   } catch (error) {
+    console.error("Error creating event:", error);
     res.status(500).json({ message: 'Failed to create event', error: error.message });
   }
 };
@@ -35,21 +67,41 @@ exports.getEventById = async (req, res) => {
   }
 };
 
-
-// Update event
+// Update event (does not handle new file upload here)
 exports.updateEvent = async (req, res) => {
   try {
-    const updatedEvent = await Event.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const updateFields = { ...req.body };
+
+    // If a new image is uploaded
+    if (req.file) {
+      updateFields.image = `/uploads/${req.file.filename}`;
+    }
+
+    const updatedEvent = await Event.findByIdAndUpdate(
+      req.params.id,
+      updateFields,
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedEvent) {
+      return res.status(404).json({ message: 'Event not found for update' });
+    }
+
     res.status(200).json(updatedEvent);
   } catch (error) {
+    console.error("Error updating event:", error);
     res.status(500).json({ message: 'Failed to update event', error: error.message });
   }
 };
 
+
 // Delete event
 exports.deleteEvent = async (req, res) => {
   try {
-    await Event.findByIdAndDelete(req.params.id);
+    const deletedEvent = await Event.findByIdAndDelete(req.params.id);
+    if (!deletedEvent) {
+      return res.status(404).json({ message: 'Event not found for deletion' });
+    }
     res.status(200).json({ message: 'Event deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: 'Failed to delete event', error: error.message });

@@ -6,7 +6,7 @@ const Schema = mongoose.Schema;
 const thesSchema = new mongoose.Schema({
   titre: { type: String, required: true },
   abstract: { type: String, required: true },
-  dateSoutenance: Date,
+  dateSoutenance: { type: Date, required: true },
   equipe: { type: mongoose.Schema.Types.ObjectId, ref: 'Team' },
   auteur: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   jury: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }]

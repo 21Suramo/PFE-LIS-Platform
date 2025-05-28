@@ -1,48 +1,45 @@
-// src/pages/AdminDashboardPage.jsx
-import React, { useState, useEffect } from 'react';
-import Layout from '../components/common/Layout';
-import StatsCard from '../components/Dashboard/StatsCard';
-import Charts from '../components/Dashboard/Charts';
-import { useAuth } from '../contexts/AuthContext';
+import React from "react";
+import Layout from "../components/common/Layout";
+import StatCards from "../components/Admin/StatCards";
+import RecentArticles from "../components/Admin/RecentArticles";
+import RecentEvents from "../components/Admin/RecentEvents";
+import TeamTable from "../components/Admin/TeamTable";
+import {
+  mockEquipes,
+  mockUtilisateurs,
+  mockArticles,
+  mockEvenements,
+} from "../data/mockData";
 
-export default function AdminDashboardPage() {
-  const { user } = useAuth();
-  const [stats, setStats] = useState({
-    totalTeams: 0,
-    totalMembers: 0,
-    pendingArticles: 0,
-    upcomingEvents: 0,
-  });
-
-  useEffect(() => {
-    // Mock temporaire ; remplacer par appels API
-    setStats({
-      totalTeams: 3,
-      totalMembers: 12,
-      pendingArticles: 5,
-      upcomingEvents: 2,
-    });
-  }, []);
+export default function AdminDashboard() {
+  // Stats à afficher
+  const stats = [
+    { label: "Membres", value: mockUtilisateurs.length },
+    { label: "Équipes", value: mockEquipes.length },
+    { label: "Articles", value: mockArticles.length },
+    {
+      label: "Événements",
+      value: mockEvenements.filter((e) => e.origine === "INTERNE").length,
+    },
+  ];
 
   return (
     <Layout>
-      <div className="px-4 sm:px-6 lg:px-12 py-12 space-y-8">
-        <h1 className="text-3xl sm:text-4xl font-bold text-primaryDark">
-          Tableau de bord Administrateur
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 py-8">
+        <h1 className="text-2xl font-bold text-lisBlue mb-6">
+          Dashboard Directeur
         </h1>
-
-        {/* Statistiques rapides */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          <StatsCard label="Équipes" value={stats.totalTeams} />
-          <StatsCard label="Membres" value={stats.totalMembers} />
-          <StatsCard label="Articles en attente" value={stats.pendingArticles} />
-          <StatsCard label="Événements à venir" value={stats.upcomingEvents} />
+        <StatCards stats={stats} />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
+          <RecentArticles articles={mockArticles.slice(0, 5)} />
+          <RecentEvents
+            events={mockEvenements
+              .filter((e) => e.origine === "INTERNE")
+              .slice(0, 5)}
+          />
         </div>
-
-        {/* Graphiques (ex. articles par équipe) */}
-        <div className="space-y-6">
-          <Charts title="Articles par équipe" dataKey="articlesByTeam" />
-          <Charts title="Participation aux événements" dataKey="eventParticipation" />
+        <div className="mt-10">
+          <TeamTable equipes={mockEquipes} />
         </div>
       </div>
     </Layout>

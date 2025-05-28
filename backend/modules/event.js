@@ -4,12 +4,37 @@ const Schema = mongoose.Schema;
 // This schema defines the structure of the Event documents in the MongoDB collection
 
 const eventSchema = new mongoose.Schema({
-  title: { type: String, required: true }, // title of the Event, required field that verifies the name value 
-  location: { type: String, required: false }, // location of the Event, not required
-  date: { type: Date, required: false }, 
-  description : { type: String, required: true },
-    image: { type: String, required: false }, // URL of the image associated with the Event
-  createdAt: { type: Date, default: Date.now }// Date when the Event was created, defaults to the current date
+  title: { type: String, required: true },
+  description: { type: String, required: true },
+  date: { type: Date, required: true },
+  location: { type: String, required: false }, // For physical location if applicable
+
+  // New fields to categorize and specify event nature
+  eventType: { // More specific than the old 'categorie' from frontend mock
+    type: String,
+    required: true,
+    enum: ["Interne", "Externe", "Séminaire", "Atelier", "Conférence"],
+    default: 'Autre'
+  },
+  format: { // To specify if in-person, online, or hybrid
+    type: String,
+    required: true,
+    enum: ['Présentiel', 'En Ligne', 'Hybride'],
+    default: 'Présentiel'
+  },
+  streamingUrl: { type: String, required: false }, // URL for online access
+  
+  // Field from frontend mockData for filtering (e.g. EventsPage vs NewsPage for external events)
+  origine: { 
+    type: String,
+    enum: ["LIS", "Autre"],
+    default: 'LIS',
+    required: true
+  },
+
+  // Existing fields
+  image: { type: String, required: false }, // Frontend uses imageUrl, but we're keeping backend names for now
+  createdAt: { type: Date, default: Date.now }
 });
 
 // Create the Event model using the schema

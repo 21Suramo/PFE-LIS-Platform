@@ -6,11 +6,12 @@ const Schema = mongoose.Schema;
 const articleSchema = new mongoose.Schema({
   title: { type: String, required: true }, // Title of the article, required field that verifies the title value 
   content: { type: String, required: true },
-  author: { type: String },
+  resume: { type: String, required: false },
+  author: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   createdAt: { type: Date, default: Date.now },// Date when the article was created, defaults to the current date
     statut: {
     type: String,
-    enum: ['DRAFT', 'PENDING', 'APPROVED'],
+    enum: ['DRAFT', 'PENDING', 'APPROVED', 'REFUSED'],
     default: 'DRAFT'
   },
   equipe: { type: mongoose.Schema.Types.ObjectId, ref: 'Team' }

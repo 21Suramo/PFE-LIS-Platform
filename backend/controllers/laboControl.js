@@ -1,13 +1,25 @@
-const Lab = require('../modules/laboratoire'); // Import the Lab model
-
+// controllers/laboControl.js
+const Lab = require('../modules/laboratoire'); // Ensure path is correct
 
 // Create Lab
 exports.createLab = async (req, res) => {
   try {
-    const newLab = new Lab(req.body);
+    
+    const { nom, description, dateCreation } = req.body;
+
+    if (!nom || !description) { 
+        return res.status(400).json({ message: "Missing required fields: nom, description."});
+    }
+    const newLabData = { nom, description, dateCreation };
+
+    const newLab = new Lab(newLabData);
     await newLab.save();
     res.status(201).json({ message: 'Lab created successfully!', lab: newLab });
   } catch (error) {
+    console.error("Error creating lab:", error);
+    if (error.code === 11000) { 
+        return res.status(400).json({ message: 'Lab with this nom already exists.' });
+    }
     res.status(500).json({ message: 'Failed to create Lab', error: error.message });
   }
 };
@@ -15,8 +27,8 @@ exports.createLab = async (req, res) => {
 // Get all Labs
 exports.getAllLabs = async (req, res) => {
   try {
-    const Labs = await Lab.find();
-    res.status(200).json(Labs);
+    const labs = await Lab.find();
+    res.status(200).json(labs);
   } catch (error) {
     res.status(500).json({ message: 'Failed to get Labs', error: error.message });
   }
@@ -35,13 +47,17 @@ exports.getLabById = async (req, res) => {
   }
 };
 
-
 // Update Lab
 exports.updateLab = async (req, res) => {
   try {
-    const updatedLab = await Lab.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    // Expects req.body to match schema: nom, description (corrected)
+    const updatedLab = await Lab.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+    if (!updatedLab) {
+        return res.status(404).json({ message: 'Lab not found for update.' });
+    }
     res.status(200).json(updatedLab);
   } catch (error) {
+    console.error("Error updating lab:", error);
     res.status(500).json({ message: 'Failed to update Lab', error: error.message });
   }
 };
@@ -49,7 +65,10 @@ exports.updateLab = async (req, res) => {
 // Delete Lab
 exports.deleteLab = async (req, res) => {
   try {
-    await Lab.findByIdAndDelete(req.params.id);
+    const deletedLab = await Lab.findByIdAndDelete(req.params.id);
+     if (!deletedLab) {
+        return res.status(404).json({ message: 'Lab not found for deletion.' });
+    }
     res.status(200).json({ message: 'Lab deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: 'Failed to delete Lab', error: error.message });

@@ -8,7 +8,8 @@ const projectSchema = new mongoose.Schema({
   description: { type: String, required: true },
   equipe: {
   type: mongoose.Schema.Types.ObjectId,
-  ref: 'Team'
+  ref: 'Team',
+  required: true
 },
 
  // Related to Team
