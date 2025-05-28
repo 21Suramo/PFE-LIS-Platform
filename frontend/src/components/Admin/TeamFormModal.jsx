@@ -4,7 +4,7 @@ import { getAllUsers } from "../../services/userService";
 import { getAllArticles } from "../../services/articleService";
 
 export default function TeamFormModal({ isOpen, onClose, onSave, team }) {
-  /* ------------ state ------------ */
+  /* ────────────────────────── state ────────────────────────── */
   const [form, setForm] = useState({
     name: "",
     specialite: "",
@@ -13,11 +13,11 @@ export default function TeamFormModal({ isOpen, onClose, onSave, team }) {
     article: "",
     leader: "",
   });
-  const [imageFile, setImageFile] = useState(null);
+  const [imageFile, setImageFile] = useState(null);       // ← same as News
   const [users, setUsers] = useState([]);
   const [articles, setArticles] = useState([]);
 
-  /* ------------ load lists once ------------ */
+  /* ─────────────────────── load lists once ─────────────────── */
   useEffect(() => {
     getAllUsers().then((list) => {
       setUsers(list);
@@ -26,7 +26,7 @@ export default function TeamFormModal({ isOpen, onClose, onSave, team }) {
     getAllArticles().then(setArticles);
   }, []);
 
-  /* ------------ populate on edit / reset ------------ */
+  /* ─────────── populate on open / reset for editing ─────────── */
   useEffect(() => {
     if (team) {
       setForm({
@@ -44,31 +44,35 @@ export default function TeamFormModal({ isOpen, onClose, onSave, team }) {
         description: "",
         objectifs: "",
         article: "",
-        leader: f.leader,          // conserve leader par défaut
+        leader: f.leader,
       }));
     }
-    setImageFile(null);
+    setImageFile(null);             // reset file each time modal opens
   }, [team, isOpen]);
 
-  /* ------------ handlers ------------ */
+  /* ────────────────────────── handlers ──────────────────────── */
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
 
+  const handleFileChange = (e) => setImageFile(e.target.files[0]); // ← same API as News
+
   const handleSubmit = (e) => {
     e.preventDefault();
+
     const fd = new FormData();
     Object.entries(form).forEach(([k, v]) => fd.append(k, v));
-    if (imageFile) fd.append("image", imageFile);
-    if (team?._id) fd.append("_id", team._id); // pour update
+    if (imageFile) fd.append("image", imageFile);          // ← identical key
+    if (team?._id) fd.append("_id", team._id);             // for updates
+
     onSave(fd);
   };
 
   if (!isOpen) return null;
 
-  /* ------------ modal ------------ */
+  /* ─────────────────────────── modal ────────────────────────── */
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
-      <div className="bg-white rounded-xl shadow-lg w-full max-w-xl max-h-[90vh] overflow-y-auto p-6 relative">
+      <div className="bg-white rounded-2xl shadow-lg w-full max-w-xl max-h-[90vh] overflow-y-auto p-6 relative">
         {/* Close */}
         <button
           onClick={onClose}
@@ -82,14 +86,14 @@ export default function TeamFormModal({ isOpen, onClose, onSave, team }) {
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* ---- Champs de base ---- */}
+          {/* ── Champs de base ── */}
           <input
             type="text"
             name="name"
             placeholder="Nom de l'équipe"
             value={form.name}
             onChange={handleChange}
-            className="w-full border px-3 py-2 rounded"
+            className="w-full border px-3 py-2 rounded shadow-sm"
             required
           />
           <input
@@ -98,7 +102,7 @@ export default function TeamFormModal({ isOpen, onClose, onSave, team }) {
             placeholder="Spécialité"
             value={form.specialite}
             onChange={handleChange}
-            className="w-full border px-3 py-2 rounded"
+            className="w-full border px-3 py-2 rounded shadow-sm"
           />
           <textarea
             name="description"
@@ -106,7 +110,7 @@ export default function TeamFormModal({ isOpen, onClose, onSave, team }) {
             value={form.description}
             onChange={handleChange}
             rows={2}
-            className="w-full border px-3 py-2 rounded"
+            className="w-full border px-3 py-2 rounded shadow-sm"
           />
           <textarea
             name="objectifs"
@@ -114,17 +118,17 @@ export default function TeamFormModal({ isOpen, onClose, onSave, team }) {
             value={form.objectifs}
             onChange={handleChange}
             rows={2}
-            className="w-full border px-3 py-2 rounded"
+            className="w-full border px-3 py-2 rounded shadow-sm"
           />
 
-          {/* ---- Leader ---- */}
+          {/* ── Leader ── */}
           <div>
             <label className="text-sm font-medium">Chef d’équipe *</label>
             <select
               name="leader"
               value={form.leader}
               onChange={handleChange}
-              className="w-full border px-3 py-2 rounded"
+              className="w-full border px-3 py-2 rounded shadow-sm"
               required
             >
               {users.map((u) => (
@@ -135,14 +139,14 @@ export default function TeamFormModal({ isOpen, onClose, onSave, team }) {
             </select>
           </div>
 
-          {/* ---- Article ---- */}
+          {/* ── Article ── */}
           <div>
             <label className="text-sm font-medium">Article associé</label>
             <select
               name="article"
               value={form.article}
               onChange={handleChange}
-              className="w-full border px-3 py-2 rounded"
+              className="w-full border px-3 py-2 rounded shadow-sm"
             >
               <option value="">-- Aucun --</option>
               {articles.map((a) => (
@@ -153,30 +157,28 @@ export default function TeamFormModal({ isOpen, onClose, onSave, team }) {
             </select>
           </div>
 
-          {/* ---- Image ---- */}
+          {/* ── Image (identical to NewsFormModal) ── */}
           <div>
-            <label className="block text-sm font-medium mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
               Image d’équipe{" "}
-              <span role="img" aria-label="Appareil photo">
+              <span role="img" aria-label="camera">
                 📷
               </span>
             </label>
             <input
               type="file"
+              name="image"
               accept="image/*"
-              onChange={(e) => setImageFile(e.target.files[0])}
-              className="w-full border px-3 py-2 rounded cursor-pointer
-                         file:mr-4 file:py-1 file:px-3 file:border-0
-                         file:text-sm file:bg-lisBlue/90 file:text-white
-                         hover:file:bg-lisBlue"
+              onChange={handleFileChange}
+              className="w-full border px-3 py-2 rounded shadow-sm"
             />
           </div>
 
-          {/* ---- Bouton sticky ---- */}
-          <div className="sticky bottom-0 bg-white pt-4 pb-2">
+          {/* ── Submit ── */}
+          <div className="flex justify-end pt-2">
             <button
               type="submit"
-              className="bg-lisBlue text-white px-5 py-2 w-full md:w-auto rounded hover:bg-blue-800"
+              className="bg-blue-600 text-white px-5 py-2 rounded hover:bg-blue-700"
             >
               {team ? "Mettre à jour" : "Enregistrer"}
             </button>
