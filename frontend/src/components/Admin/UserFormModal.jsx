@@ -6,24 +6,10 @@ export default function UserFormModal({
   onSave,
   initialUser,
 }) {
-  const [form, setForm] = useState({
-    nom: "",
-    email: "",
-    role: "MEMBRE",
-    password: "",
-  });
+  const [form, setForm] = useState({ nom: "", email: "", role: "MEMBRE" });
 
   useEffect(() => {
-    if (initialUser) {
-      setForm({
-        nom: initialUser.nom || "",
-        email: initialUser.email || "",
-        role: initialUser.role || "MEMBRE",
-        password: "", // don't reuse old password when editing
-      });
-    } else {
-      setForm({ nom: "", email: "", role: "MEMBRE", password: "" });
-    }
+    setForm(initialUser || { nom: "", email: "", role: "MEMBRE" });
   }, [initialUser, isOpen]);
 
   if (!isOpen) return null;
@@ -33,8 +19,7 @@ export default function UserFormModal({
       <div className="bg-white rounded-xl shadow-lg w-full max-w-md p-6 relative">
         <button
           className="absolute top-3 right-3 text-2xl text-gray-500 hover:text-lisBlue"
-          onClick={onClose}
-        >
+          onClick={onClose}>
           &times;
         </button>
         <h2 className="text-lg font-bold mb-4">
@@ -45,8 +30,7 @@ export default function UserFormModal({
             e.preventDefault();
             onSave(form);
           }}
-          className="flex flex-col gap-4"
-        >
+          className="flex flex-col gap-4">
           <input
             className="border rounded px-3 py-2"
             placeholder="Nom"
@@ -62,22 +46,10 @@ export default function UserFormModal({
             onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
             required
           />
-          <input
-            className="border rounded px-3 py-2"
-            placeholder="Mot de passe"
-            type="password"
-            value={form.password}
-            onChange={(e) =>
-              setForm((f) => ({ ...f, password: e.target.value }))
-            }
-            required
-          />
-
           <select
             className="border rounded px-3 py-2"
             value={form.role}
-            onChange={(e) => setForm((f) => ({ ...f, role: e.target.value }))}
-          >
+            onChange={(e) => setForm((f) => ({ ...f, role: e.target.value }))}>
             <option value="MEMBRE">Membre</option>
             <option value="DOCTORANT">Doctorant</option>
             <option value="RESPONSABLE">Responsable</option>
@@ -85,8 +57,7 @@ export default function UserFormModal({
           </select>
           <button
             className="bg-lisBlue text-white px-4 py-2 rounded hover:bg-blue-900"
-            type="submit"
-          >
+            type="submit">
             {initialUser ? "Sauvegarder" : "Ajouter"}
           </button>
         </form>

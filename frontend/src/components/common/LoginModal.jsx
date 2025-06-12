@@ -1,248 +1,291 @@
 // src/components/common/LoginModal.jsx
-import React, { useState, useEffect } from "react";
-import { useAuth } from "../../contexts/AuthContext"; // Correct path to your AuthContext
+import React, { useState, useEffect, useRef } from "react";
+import { useAuth } from "../../contexts/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
-import { EyeIcon, EyeOffIcon, AlertTriangleIcon } from "lucide-react";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/Tabs"; // Assuming this path is correct for your shadcn/ui Tabs
+import {
+  EyeIcon,
+  EyeOffIcon,
+  AlertTriangleIcon,
+  XIcon,
+  MailIcon,
+  LockIcon,
+  Loader2Icon,
+} from "lucide-react";
+import {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+} from "../../components/ui/Tabs";
+
+const spring3D = {
+  type: "spring",
+  stiffness: 140,
+  damping: 14,
+};
 
 export default function LoginModal({ isOpen, onClose }) {
-  const { login, resetPassword } = useAuth(); // Get login from context. `resetPassword` is not implemented yet in context.
-  const [tab, setTab] = useState("login"); // 'login' or 'reset'
+  const { login, resetPassword } = useAuth();
+  const [tab, setTab] = useState("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [remember, setRemember] = useState(false); // 'remember' functionality is not fully implemented in AuthContext persistence.
+  const [remember, setRemember] = useState(false);
   const [error, setError] = useState(null);
-  const [message, setMessage] = useState(null); // For success messages like password reset
+  const [message, setMessage] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false); // Local loading state for the form
+  const [loading, setLoading] = useState(false);
+  const firstInputRef = useRef(null);
 
-  const handleLoginSubmit = async (e) => {
-    e.preventDefault();
-    setError(null);
-    setMessage(null);
-    setLoading(true);
-
-    if (!email.includes("@")) { // Basic email validation
-      setError("Veuillez entrer une adresse email valide.");
-      setLoading(false);
-      return;
-    }
-
-    try {
-      await login(email, password); // Call the login function from AuthContext
-      // 'remember' is not directly handled by context's localStorage logic, token persistence is default.
-      onClose(); // Close modal on successful login
-    } catch (err) {
-      // err.response.data.message should contain backend error
-      setError(err.response?.data?.message || "Échec de la connexion. Vérifiez vos identifiants.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handlePasswordResetSubmit = async (e) => {
-    e.preventDefault();
-    setError(null);
-    setMessage(null);
-    setLoading(true);
-    // Assuming `resetPassword` is a function in your AuthContext that calls a backend endpoint
-    // For now, it's a placeholder. You'd need to implement this in AuthContext and backend.
-    try {
-        if(resetPassword) { // Check if resetPassword function exists
-            // await resetPassword(email); // Example call
-            setMessage("Si un compte avec cet email existe, un email de réinitialisation a été envoyé.");
-            setEmail(""); // Clear email field
-        } else {
-            setMessage("La fonctionnalité de réinitialisation du mot de passe n'est pas encore disponible.");
-        }
-    } catch (err) {
-        setError(err.response?.data?.message || "Erreur lors de la demande de réinitialisation.");
-    } finally {
-        setLoading(false);
-    }
-  };
-
-  // Reset form state when modal is closed or tab changes
+  // Reset on modal open
   useEffect(() => {
-    if (!isOpen) {
+    if (isOpen) {
+      setTab("login");
       setEmail("");
       setPassword("");
       setRemember(false);
       setError(null);
       setMessage(null);
       setShowPassword(false);
-      setLoading(false);
-      setTab("login"); // Reset to login tab when modal reopens
-    } else {
-        setError(null); // Clear errors when modal opens or tab changes
-        setMessage(null);
+      setTimeout(() => firstInputRef.current?.focus(), 350);
     }
-  }, [isOpen, tab]);
+  }, [isOpen]);
 
+  // Reset errors/messages when tab changes
+  useEffect(() => {
+    setError(null);
+    setMessage(null);
+    setPassword("");
+  }, [tab]);
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError(null);
+    setMessage(null);
+    if (!email.includes("@")) {
+      setError("Veuillez entrer une adresse email valide.");
+      return;
+    }
+    setLoading(true);
+    try {
+      if (tab === "login") {
+        await login(email, password, remember);
+        onClose();
+      } else {
+        await resetPassword(email);
+        setMessage("Un email de réinitialisation a été envoyé.");
+      }
+    } catch {
+      setError("Une erreur est survenue. Veuillez réessayer.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const submitLabel = loading
+    ? tab === "login"
+      ? "Connexion…"
+      : "Envoi…"
+    : tab === "login"
+      ? "Se connecter"
+      : "Envoyer le lien";
+
+  // 3D modal open/close animation + glassmorphism effect
   return (
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-[3px]"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-        >
+          exit={{ opacity: 0 }}>
           <motion.div
-            className="bg-white rounded-lg shadow-xl p-6 w-[90%] max-w-sm"
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.8, opacity: 0 }}
+            className="relative bg-white/85 dark:bg-base-alt-dark/80 backdrop-blur-xl rounded-2xl shadow-2xl p-7 w-[92vw] max-w-sm"
+            initial={{ scale: 0.82, opacity: 0, rotateY: -40 }}
+            animate={{ scale: 1, opacity: 1, rotateY: 0 }}
+            exit={{ scale: 0.85, opacity: 0, rotateY: 20 }}
+            transition={spring3D}
             role="dialog"
             aria-modal="true"
             aria-labelledby="modal-title"
-            onClick={(e) => e.stopPropagation()} // Prevent closing modal when clicking inside
-          >
-            <Tabs defaultValue="login" value={tab} onValueChange={setTab}>
-              <TabsList className="grid grid-cols-2 mb-4">
-                <TabsTrigger value="login">Connexion</TabsTrigger>
-                <TabsTrigger value="reset">Mot de passe oublié ?</TabsTrigger>
+            style={{ boxShadow: "0 8px 48px 0 rgba(0,0,0,0.18)" }}>
+            {/* Bouton Fermer */}
+            <motion.button
+              onClick={onClose}
+              whileTap={{ scale: 0.8, rotate: 90 }}
+              className="absolute top-3 right-3 p-2 rounded-full bg-white/70 dark:bg-base-dark/70 shadow hover:bg-red-100 dark:hover:bg-red-400/30 transition"
+              aria-label="Fermer">
+              <XIcon className="w-5 h-5 text-gray-600 dark:text-gray-200" />
+            </motion.button>
+
+            {/* Tabs avec effet 3D */}
+            <Tabs value={tab} onValueChange={setTab}>
+              <TabsList
+                className="grid grid-cols-2 mb-6 rounded-xl bg-gray-100 dark:bg-base-dark/60 overflow-hidden"
+                role="tablist">
+                <TabsTrigger
+                  value="login"
+                  className="data-[state=active]:bg-lisBlue data-[state=active]:text-white data-[state=active]:shadow-xl data-[state=active]:scale-105 py-2 transition-all">
+                  Connexion
+                </TabsTrigger>
+                <TabsTrigger
+                  value="reset"
+                  className="data-[state=active]:bg-lisBlue data-[state=active]:text-white data-[state=active]:shadow-xl data-[state=active]:scale-105 py-2 transition-all">
+                  Mot de passe oublié ?
+                </TabsTrigger>
               </TabsList>
 
-              {error && (
-                <p className="flex items-center text-red-600 text-sm mb-3 p-2 bg-red-100 rounded">
-                  <AlertTriangleIcon className="w-4 h-4 mr-2 flex-shrink-0" /> {error}
-                </p>
-              )}
-              {message && (
-                <p className="text-green-600 text-sm mb-3 p-2 bg-green-100 rounded text-center">
-                  {message}
-                </p>
-              )}
+              {/* Animation feedback erreurs/messages */}
+              <AnimatePresence>
+                {error && (
+                  <motion.div
+                    key="error"
+                    initial={{ opacity: 0, y: -6, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                    className="flex items-center text-red-600 text-sm mb-3">
+                    <AlertTriangleIcon className="w-4 h-4 mr-1" /> {error}
+                  </motion.div>
+                )}
+                {message && (
+                  <motion.div
+                    key="msg"
+                    initial={{ opacity: 0, y: -6, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                    className="text-green-600 text-sm mb-3 text-center">
+                    {message}
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
-              {/* LOGIN FORM */}
-              <TabsContent value="login" forceMount={tab === 'login'}>
-                <form onSubmit={handleLoginSubmit} className="space-y-4">
-                  <div>
-                    <label
-                      htmlFor="email-login" // Unique ID
-                      className="block text-sm font-medium text-gray-700"
-                    >
-                      Adresse email
-                    </label>
+              {/* Form */}
+              <motion.form
+                layout
+                onSubmit={handleSubmit}
+                className="space-y-5"
+                initial={false}>
+                <TabsContent value="login" forceMount>
+                  {/* Email */}
+                  <motion.div
+                    layout
+                    className="flex items-center border border-gray-300 rounded-lg px-3 py-2 bg-white/80 dark:bg-base-dark/60 focus-within:ring-2 focus-within:ring-lisBlue"
+                    whileFocus={{
+                      scale: 1.02,
+                      boxShadow: "0 2px 12px rgba(30,64,175,0.08)",
+                    }}>
+                    <MailIcon className="text-gray-500 w-5 h-5 mr-2" />
                     <input
-                      id="email-login"
+                      ref={firstInputRef}
                       type="email"
+                      autoComplete="email"
+                      placeholder="Adresse email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
-                      className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-lisBlue focus:border-lisBlue"
+                      className="w-full bg-transparent border-none focus:outline-none text-base"
                     />
-                  </div>
-
-                  <div>
-                    <label
-                      htmlFor="password-login" // Unique ID
-                      className="block text-sm font-medium text-gray-700"
-                    >
-                      Mot de passe
-                    </label>
-                    <div className="relative">
-                      <input
-                        id="password-login"
-                        type={showPassword ? "text" : "password"}
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                        className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-lisBlue focus:border-lisBlue pr-10"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-sm leading-5 text-gray-500 hover:text-gray-700"
-                        aria-label={showPassword ? "Hide password" : "Show password"}
-                      >
-                        {showPassword ? (
-                          <EyeOffIcon className="w-5 h-5" />
-                        ) : (
-                          <EyeIcon className="w-5 h-5" />
-                        )}
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between text-sm">
-                    <div className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          id="remember"
-                          checked={remember}
-                          onChange={(e) => setRemember(e.target.checked)}
-                          className="h-4 w-4 text-lisBlue border-gray-300 rounded focus:ring-lisBlue accent-lisBlue"
-                        />
-                        <label htmlFor="remember" className="text-gray-700">
-                          Se souvenir de moi
-                        </label>
-                    </div>
-                  </div>
-                  <button
-                    disabled={loading}
-                    type="submit"
-                    aria-busy={loading}
-                    className="w-full py-2 px-4 bg-lisBlue text-white font-semibold rounded-md hover:bg-blue-900 transition duration-150 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-                  >
-                    {loading && (
-                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                    )}
-                    {loading ? "Connexion..." : "Se connecter"}
-                  </button>
-                </form>
-              </TabsContent>
-              
-              {/* PASSWORD RESET FORM */}
-              <TabsContent value="reset" forceMount={tab === 'reset'}>
-                <form onSubmit={handlePasswordResetSubmit} className="space-y-4">
-                    <p className="text-sm text-gray-600">
-                        Entrez votre adresse email et nous vous enverrons un lien pour réinitialiser votre mot de passe.
-                    </p>
-                  <div>
-                    <label
-                      htmlFor="email-reset" // Unique ID
-                      className="block text-sm font-medium text-gray-700"
-                    >
-                      Adresse email
-                    </label>
+                  </motion.div>
+                  {/* Password */}
+                  <motion.div
+                    layout
+                    className="flex items-center border border-gray-300 rounded-lg px-3 py-2 bg-white/80 dark:bg-base-dark/60 mt-3 focus-within:ring-2 focus-within:ring-lisBlue"
+                    whileFocus={{
+                      scale: 1.02,
+                      boxShadow: "0 2px 12px rgba(30,64,175,0.09)",
+                    }}>
+                    <LockIcon className="text-gray-500 w-5 h-5 mr-2" />
                     <input
-                      id="email-reset"
+                      type={showPassword ? "text" : "password"}
+                      autoComplete="current-password"
+                      placeholder="Mot de passe"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      className="w-full bg-transparent border-none focus:outline-none text-base"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((v) => !v)}
+                      className="text-gray-500 ml-2"
+                      tabIndex={-1}
+                      aria-label={
+                        showPassword
+                          ? "Masquer le mot de passe"
+                          : "Afficher le mot de passe"
+                      }>
+                      {showPassword ? (
+                        <EyeOffIcon className="w-5 h-5" />
+                      ) : (
+                        <EyeIcon className="w-5 h-5" />
+                      )}
+                    </button>
+                  </motion.div>
+                  {/* Remember */}
+                  <div className="flex items-center gap-2 text-sm mt-2">
+                    <input
+                      type="checkbox"
+                      id="remember"
+                      checked={remember}
+                      onChange={() => setRemember(!remember)}
+                      className="accent-lisBlue rounded-md"
+                    />
+                    <label
+                      htmlFor="remember"
+                      className="text-gray-600 dark:text-gray-400">
+                      Se souvenir de moi
+                    </label>
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="reset" forceMount>
+                  <motion.div
+                    layout
+                    className="flex items-center border border-gray-300 rounded-lg px-3 py-2 bg-white/80 dark:bg-base-dark/60 focus-within:ring-2 focus-within:ring-lisBlue"
+                    whileFocus={{
+                      scale: 1.02,
+                      boxShadow: "0 2px 12px rgba(30,64,175,0.09)",
+                    }}>
+                    <MailIcon className="text-gray-500 w-5 h-5 mr-2" />
+                    <input
+                      ref={firstInputRef}
                       type="email"
-                      value={email} // Shared email state for simplicity, or use separate
+                      placeholder="Adresse email"
+                      value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
-                      className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-lisBlue focus:border-lisBlue"
+                      className="w-full bg-transparent border-none focus:outline-none text-base"
                     />
-                  </div>
-                  <button
-                    disabled={loading}
-                    type="submit"
-                    aria-busy={loading}
-                    className="w-full py-2 px-4 bg-lisBlue text-white font-semibold rounded-md hover:bg-blue-900 transition duration-150 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-                  >
-                     {loading && (
-                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                    )}
-                    {loading ? "Envoi..." : "Envoyer le lien"}
-                  </button>
-                </form>
-              </TabsContent>
+                  </motion.div>
+                </TabsContent>
+
+                {/* Bouton Submit */}
+                <motion.button
+                  disabled={loading}
+                  type="submit"
+                  aria-busy={loading}
+                  whileTap={{ scale: 0.96 }}
+                  className="w-full flex items-center justify-center gap-2 py-2 px-4 bg-lisBlue text-white font-semibold rounded-lg hover:bg-primary-dark transition disabled:opacity-50 disabled:cursor-not-allowed shadow-md">
+                  {loading && <Loader2Icon className="animate-spin w-5 h-5" />}
+                  <span>{submitLabel}</span>
+                </motion.button>
+              </motion.form>
             </Tabs>
-            
-            {/* Removed redundant "Se connecter" button, tab navigation handles this */}
+
+            {/* Raccourci retour à connexion depuis reset */}
+            {tab === "reset" && (
+              <div className="mt-2 text-center">
+                <button
+                  onClick={() => setTab("login")}
+                  className="text-sm text-lisBlue font-medium hover:underline">
+                  Se connecter
+                </button>
+              </div>
+            )}
+
+            {/* Lien Annuler */}
             <button
               onClick={onClose}
-              className="mt-6 text-sm text-gray-600 hover:text-lisBlue w-full text-center"
-            >
+              className="mt-4 text-sm text-gray-600 dark:text-gray-400 hover:underline w-full text-center">
               Annuler
             </button>
           </motion.div>

@@ -42,12 +42,3 @@ export const ROLES = {
     NO_DATA: 'Aucun élément à afficher.',
   };
   
-
-  // src/utils/constants.js
-export const EVENT_CATEGORIES = [
-  "Interne",
-  "Externe",
-  "Séminaire",
-  "Conférence",
-  "Atelier",
-];

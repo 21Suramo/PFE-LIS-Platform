@@ -1,72 +1,101 @@
 // src/components/common/Header.jsx
-
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import LoginModal from "./LoginModal";
 import Sidebar from "./Sidebar";
-import Button from "./Button";
 import logo from "../../assets/images/logo.png";
+import Button from "./Button";
 
 export default function Header() {
   const { user, logout } = useAuth();
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  // Fermeture du menu avec Échap
+  // Fermer modal ou sidebar au ESC
   useEffect(() => {
-    function handleKeyDown(e) {
-      if (e.key === "Escape" && isMenuOpen) setIsMenuOpen(false);
-    }
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isMenuOpen]);
+    const handleEsc = (e) => {
+      if (e.key === "Escape") {
+        setIsMenuOpen(false);
+        setIsLoginOpen(false);
+      }
+    };
+    window.addEventListener("keydown", handleEsc);
+    return () => window.removeEventListener("keydown", handleEsc);
+  }, []);
 
   return (
     <>
       <header
-        className="bg-background shadow-sm h-[80px] sm:h-[100px] px-4 sm:px-8 lg:px-12 flex items-center justify-between sticky top-0 z-50"
+        className="fixed top-0 left-0 right-0 h-[var(--header-height)] bg-base dark:bg-base-dark shadow-sm z-50"
         role="banner">
-        {/* Bouton menu */}
-        <Button
-          variant="primary"
-          aria-label="Ouvrir le menu"
-          aria-expanded={isMenuOpen}
-          aria-controls="sidebar"
-          onClick={() => setIsMenuOpen(true)}>
-          ☰ Menu
-        </Button>
+        <div className="flex items-center justify-between h-full container mx-auto px-md">
+          {/* Bouton menu */}
+          <button
+            aria-label="Ouvrir le menu"
+            aria-expanded={isMenuOpen}
+            aria-controls="sidebar"
+            onClick={() => setIsMenuOpen(true)}
+            className="p-2 rounded-md hover:bg-[var(--color-primary)]/10 focus:outline-none focus:ring-2 focus:ring-[var(--color-focus)]">
+            <svg
+              className="h-6 w-6 text-[var(--color-primary)]"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 6h16M4 12h16M4 18h16"
+              />
+            </svg>
+          </button>
 
-        {/* Logo animé */}
-        <Link to="/" aria-label="Accueil" className="flex items-center">
-          <img
-            src={logo}
-            alt="Logo LIS"
-            className="h-[48px] sm:h-[60px] max-w-[140px] object-contain drop-shadow-md animate-zoom-in-out"
-          />
-        </Link>
+          {/* Logo */}
+          <Link to="/" aria-label="Accueil" className="flex items-center">
+            <img
+              src={logo}
+              alt="Logo LIS"
+              className="h-12 sm:h-14 object-contain drop-shadow-md transition-transform hover:scale-105"
+            />
+          </Link>
 
-        {/* Connexion / Déconnexion */}
-        {user ? (
-          <Button variant="primary" onClick={logout}>
-            Se déconnecter
-          </Button>
-        ) : (
-          <Button variant="primary" onClick={() => setIsLoginOpen(true)}>
-            Connexion
-          </Button>
-        )}
+          {/* Auth */}
+          {user ? (
+            <Button
+              variant="primary"
+              onClick={logout}
+              className="whitespace-nowrap">
+              Se déconnecter
+            </Button>
+          ) : (
+            <Button
+              variant="primary"
+              onClick={() => setIsLoginOpen(true)}
+              className="whitespace-nowrap">
+              Connexion
+            </Button>
+          )}
+        </div>
       </header>
 
-      {/* Sidebar off-canvas */}
+      {/* Sidebar off-canvas (avec son overlay interne) */}
       <Sidebar
         id="sidebar"
         isOpen={isMenuOpen}
         onClose={() => setIsMenuOpen(false)}
       />
 
-      {/* Fenêtre modale de connexion */}
+      {/* Modal de connexion */}
       <LoginModal isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
+
+      {/* Overlay uniquement pour la modal de login */}
+      {isLoginOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
+          onClick={() => setIsLoginOpen(false)}
+        />
+      )}
     </>
   );
 }

@@ -1,9 +1,7 @@
 import { motion } from "framer-motion";
 
 export default function EventCard({ event, onOpenDetails }) {
-  const date = event.date
-    ? new Date(event.date).toLocaleDateString("fr-FR")
-    : "";
+  const date = event.date || "";
 
   return (
     <motion.div
@@ -15,50 +13,38 @@ export default function EventCard({ event, onOpenDetails }) {
         if (e.key === "Enter") onOpenDetails && onOpenDetails(event);
       }}
       role="button"
-      aria-label={`Voir le détail de l'événement ${event.title}`}
-    >
+      aria-label={`Voir le détail de l'événement ${event.titre}`}>
       <div className="relative h-32 w-full rounded-t-xl overflow-hidden">
         <img
-          src={`http://localhost:3000${event.image}`}
-          alt={event.title}
+          src={event.imageUrl || "/default-event.jpg"}
+          alt={event.titre}
           className="object-cover w-full h-full transition-transform group-hover:scale-105"
         />
-
       </div>
-
       <div className="p-3">
-        <h2 className="text-base font-bold text-lisBlue mb-1">
-          {event.title}
-        </h2>
-
+        <h2 className="text-base font-bold text-lisBlue mb-1">{event.titre}</h2>
         <div className="flex items-center gap-2 mb-1">
           <span className="text-xs text-gray-500">{date}</span>
-          {event.eventType && (
-            <span className="ml-auto px-3 py-0.5 text-xs rounded-full font-semibold bg-blue-100 text-blue-700">
-              {event.eventType}
-            </span>
-          )}
+          <span className="ml-auto px-3 py-0.5 text-xs rounded-full font-semibold bg-blue-100 text-blue-700">
+            {event.categorie}
+          </span>
         </div>
-
         <p className="text-sm text-gray-700 line-clamp-3 mb-0.5">
           {event.description}
         </p>
-
-        {event.location && (
+        {event.lieu && (
           <div className="text-xs text-gray-500 mt-1 italic">
-            Lieu : {event.location}
+            Lieu : {event.lieu}
           </div>
         )}
-
-        {event.streamingUrl && event.streamingUrl.trim() !== "" && (
+        {event.streamingUrl && (
           <div className="mt-2">
             <a
               href={event.streamingUrl}
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
-              className="inline-block px-3 py-1 bg-green-500 text-white text-xs rounded-full hover:bg-green-600 transition"
-            >
+              className="inline-block px-3 py-1 bg-green-500 text-white text-xs rounded-full hover:bg-green-600 transition">
               🎬 Streaming en direct
             </a>
           </div>

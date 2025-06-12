@@ -1,174 +1,308 @@
 import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import Layout from "../components/common/Layout";
 import { useAuth } from "../contexts/AuthContext";
-import { mockArticles, mockEquipes, mockUtilisateurs } from "../data/mockData";
+import { mockArticles } from "../data/mockData";
 
-export default function LeaderDashboardPage() {
-  const { user } = useAuth();
-  const team = mockEquipes.find((eq) => eq.responsableId === user?.id);
-  const [equipe, setEquipe] = useState(team);
-  const [memberToDelete, setMemberToDelete] = useState(null);
-
-  const articles = mockArticles.filter(
-    (a) => a.statut === "PENDING" && equipe?.membres?.includes(a.auteurId)
+// Modal 3D propre et scrollable si besoin
+function Modal3D({ open, onClose, title, children }) {
+  if (!open) return null;
+  return (
+    <AnimatePresence>
+      <motion.div
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}>
+        <motion.div
+          className="bg-white rounded-2xl shadow-2xl w-[95vw] max-w-xl p-6 relative flex flex-col"
+          initial={{ scale: 0.93, rotateY: -24, opacity: 0 }}
+          animate={{ scale: 1, rotateY: 0, opacity: 1 }}
+          exit={{ scale: 0.97, rotateY: 8, opacity: 0 }}
+          transition={{ type: "spring", stiffness: 200, damping: 20 }}>
+          <button
+            className="absolute top-3 right-4 text-gray-400 hover:text-red-600 text-2xl"
+            onClick={onClose}
+            aria-label="Fermer"
+            tabIndex={0}>
+            &times;
+          </button>
+          <h2 className="text-xl font-bold mb-6 text-blue-900">{title}</h2>
+          <div className="overflow-y-auto max-h-[65vh] px-1">{children}</div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
   );
-  const [localArticles, setLocalArticles] = useState(articles);
+}
 
-  const handleApprove = (articleId) => {
-    setLocalArticles((prev) =>
-      prev.map((a) => (a.id === articleId ? { ...a, statut: "APPROVED" } : a))
-    );
-  };
+export default function MemberPanelPage() {
+  const { user } = useAuth();
+  // Mes articles PENDING uniquement
+  const [localArticles, setLocalArticles] = useState(
+    mockArticles.filter(
+      (a) => a.auteurId === user?.id && a.statut === "PENDING"
+    )
+  );
+  // Modal état
+  const [modalOpen, setModalOpen] = useState(false);
+  const [isEdit, setIsEdit] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  // Form state
+  const [form, setForm] = useState({
+    titre: "",
+    description: "",
+    pdf: null,
+    pdfName: "",
+    image: null,
+    imageUrl: "",
+  });
 
-  const handleRemoveMember = (memberId) => {
-    setEquipe((prev) => ({
+  // Ouvrir modal (ajout ou édition)
+  function openAddModal() {
+    setForm({
+      titre: "",
+      description: "",
+      pdf: null,
+      pdfName: "",
+      image: null,
+      imageUrl: "",
+    });
+    setIsEdit(false);
+    setEditingId(null);
+    setModalOpen(true);
+  }
+  function openEditModal(article) {
+    setForm({
+      titre: article.titre,
+      description: article.description || "",
+      pdf: null,
+      pdfName: article.pdfName || "",
+      image: null,
+      imageUrl: article.imageUrl || "",
+    });
+    setIsEdit(true);
+    setEditingId(article.id);
+    setModalOpen(true);
+  }
+  // PDF handler
+  function handlePDF(e) {
+    const file = e.target.files[0];
+    setForm((prev) => ({
       ...prev,
-      membres: prev.membres.filter((id) => id !== memberId),
+      pdf: file,
+      pdfName: file ? file.name : "",
     }));
-  };
-
-  const handleAddMember = () => {
-    const allMembers = mockUtilisateurs.filter(
-      (u) => u.role === "MEMBRE" && !equipe.membres.includes(u.id)
-    );
-    const random = allMembers[Math.floor(Math.random() * allMembers.length)];
-    if (random) {
-      setEquipe((prev) => ({
-        ...prev,
-        membres: [...prev.membres, random.id],
-      }));
+  }
+  // Image handler (affichage preview)
+  function handleImage(e) {
+    const file = e.target.files[0];
+    setForm((prev) => ({
+      ...prev,
+      image: file,
+      imageUrl: file ? URL.createObjectURL(file) : "",
+    }));
+  }
+  // Soumission
+  function handleSubmit(e) {
+    e.preventDefault();
+    if (!form.titre.trim()) return alert("Titre requis !");
+    if (isEdit) {
+      setLocalArticles((prev) =>
+        prev.map((a) =>
+          a.id === editingId
+            ? {
+                ...a,
+                titre: form.titre,
+                description: form.description,
+                pdfName: form.pdfName || a.pdfName,
+                imageUrl: form.imageUrl || a.imageUrl,
+              }
+            : a
+        )
+      );
     } else {
-      alert("Aucun membre disponible à ajouter.");
+      setLocalArticles((prev) => [
+        ...prev,
+        {
+          id: Math.random().toString(36).slice(2),
+          titre: form.titre,
+          description: form.description,
+          pdfName: form.pdfName,
+          imageUrl: form.imageUrl,
+          statut: "PENDING",
+          auteurId: user.id,
+          equipe: user.equipe,
+          dateSoumission: new Date().toISOString(),
+        },
+      ]);
     }
+    setModalOpen(false);
+  }
+  // Suppression
+  function handleDelete(id) {
+    setLocalArticles((prev) => prev.filter((a) => a.id !== id));
+  }
+
+  // Effets 3D sur les cards
+  const card3d = {
+    whileHover: { scale: 1.022, rotateY: 4, boxShadow: "0 6px 32px #bdd8ff70" },
+    whileTap: { scale: 0.96, rotateY: -5 },
+    transition: { type: "spring", stiffness: 150, damping: 20 },
   };
 
   return (
     <Layout>
-      <div className="p-8">
-        <h1 className="text-2xl font-bold text-lisBlue mb-6">
-          Tableau de bord Responsable
+      <div className="mx-auto py-10 px-2 w-[96%] md:w-[85%] lg:w-[75%] max-w-3xl flex flex-col min-h-[70vh]">
+        <h1 className="text-2xl md:text-3xl font-bold text-blue-900 mb-7">
+          Mes articles en attente de validation
         </h1>
-
-        {/* Articles à valider */}
-        <section className="mb-10">
-          <h2 className="text-xl font-semibold text-primaryDark mb-4">
-            Articles à valider
-          </h2>
-
-          {localArticles.length === 0 ? (
-            <p className="text-gray-500">Aucun article en attente.</p>
-          ) : (
-            <table className="w-full text-sm bg-white/90 rounded-xl shadow overflow-hidden">
-              <thead>
-                <tr className="text-left text-gray-600 border-b">
-                  <th className="py-2 px-4">Titre</th>
-                  <th>Auteur</th>
-                  <th>Statut</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {localArticles.map((article) => {
-                  const auteur = mockUtilisateurs.find(
-                    (u) => u.id === article.auteurId
-                  );
-                  return (
-                    <tr key={article.id} className="border-b last:border-none">
-                      <td className="py-2 px-4">{article.titre}</td>
-                      <td>{auteur?.fullName}</td>
-                      <td>
-                        <span className="text-yellow-700 bg-yellow-100 px-2 py-1 rounded-full text-xs">
-                          {article.statut}
-                        </span>
-                      </td>
-                      <td>
-                        <button
-                          onClick={() => handleApprove(article.id)}
-                          className="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700">
-                          Valider
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          )}
-        </section>
-
-        {/* Membres de l'équipe */}
-        <section>
-          <h2 className="text-xl font-semibold text-primaryDark mb-4">
-            Gestion des membres de l’équipe
-          </h2>
-
-          {equipe?.membres?.length > 0 ? (
-            <ul className="space-y-3">
-              {equipe.membres.map((memberId) => {
-                const membre = mockUtilisateurs.find((u) => u.id === memberId);
-                return (
-                  <li
-                    key={memberId}
-                    className="flex justify-between items-center border p-3 rounded bg-white shadow">
-                    <div>
-                      <p className="font-semibold">{membre?.fullName}</p>
-                      <p className="text-sm text-gray-500">{membre?.email}</p>
-                    </div>
-                    <button
-                      onClick={() => setMemberToDelete(memberId)}
-                      className="text-red-600 hover:underline text-sm">
-                      🗑 Supprimer
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          ) : (
-            <p className="text-gray-500 italic">
-              Aucun membre actuellement dans l’équipe.
-            </p>
-          )}
-
+        <div className="flex justify-end mb-6">
           <button
-            onClick={handleAddMember}
-            className="mt-5 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-            ➕ Ajouter un membre
+            onClick={openAddModal}
+            className="bg-blue-600 text-white px-5 py-2 rounded-lg font-semibold shadow hover:bg-blue-800 active:scale-95 transition">
+            + Ajouter un article
           </button>
-        </section>
+        </div>
+        {/* Liste des articles pending */}
+        <div className="space-y-5">
+          {localArticles.length === 0 ? (
+            <motion.div
+              initial={{ opacity: 0, y: 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-gray-500 italic py-10 text-center">
+              Aucun article en attente.
+            </motion.div>
+          ) : (
+            localArticles.map((a) => (
+              <motion.div
+                {...card3d}
+                key={a.id}
+                className="flex items-center gap-5 border rounded-xl bg-white shadow-lg p-5">
+                {a.imageUrl && (
+                  <img
+                    src={a.imageUrl}
+                    alt="Aperçu"
+                    className="w-20 h-20 rounded-lg object-cover border"
+                  />
+                )}
+                <div className="flex-1">
+                  <div className="font-bold text-lg text-blue-900">
+                    {a.titre}
+                  </div>
+                  <div className="text-sm text-gray-700">
+                    {a.description?.slice(0, 150) || (
+                      <span className="italic text-gray-400">
+                        Pas de description
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex gap-2 items-center mt-2 text-xs">
+                    {a.pdfName && (
+                      <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded">
+                        PDF: {a.pdfName}
+                      </span>
+                    )}
+                    <span className="bg-yellow-100 text-yellow-700 px-2 py-1 rounded">
+                      {a.statut}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex flex-col gap-2">
+                  <button
+                    onClick={() => openEditModal(a)}
+                    className="px-4 py-1 rounded bg-blue-100 text-blue-800 hover:bg-blue-200 text-sm font-semibold shadow">
+                    Modifier
+                  </button>
+                  <button
+                    onClick={() => handleDelete(a.id)}
+                    className="px-4 py-1 rounded bg-red-100 text-red-700 hover:bg-red-200 text-sm font-semibold shadow">
+                    Supprimer
+                  </button>
+                </div>
+              </motion.div>
+            ))
+          )}
+        </div>
 
-        {/* Modal de confirmation suppression */}
-        {memberToDelete && (
-          <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
-            <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm relative">
-              <h3 className="text-lg font-semibold mb-4">
-                Confirmer la suppression
-              </h3>
-              <p className="text-sm text-gray-700 mb-6">
-                Êtes-vous sûr de vouloir retirer ce membre de votre équipe ?
-              </p>
-              <div className="flex justify-end gap-4">
-                <button
-                  className="px-4 py-2 rounded bg-gray-200 text-gray-700 hover:bg-gray-300"
-                  onClick={() => setMemberToDelete(null)}>
-                  Annuler
-                </button>
-                <button
-                  className="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700"
-                  onClick={() => {
-                    handleRemoveMember(memberToDelete);
-                    setMemberToDelete(null);
-                  }}>
-                  Supprimer
-                </button>
-              </div>
+        {/* Modal ajout/édition article */}
+        <Modal3D
+          open={modalOpen}
+          onClose={() => setModalOpen(false)}
+          title={isEdit ? "Modifier l'article" : "Ajouter un article"}>
+          <form
+            className="flex flex-col gap-5"
+            onSubmit={handleSubmit}
+            encType="multipart/form-data">
+            <label className="font-semibold">
+              Titre
+              <input
+                type="text"
+                value={form.titre}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, titre: e.target.value }))
+                }
+                className="w-full mt-1 px-3 py-2 border rounded focus:outline-blue-400"
+                required
+              />
+            </label>
+            <label className="font-semibold">
+              Description
+              <textarea
+                rows={3}
+                value={form.description}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, description: e.target.value }))
+                }
+                className="w-full mt-1 px-3 py-2 border rounded focus:outline-blue-400"
+                required
+              />
+            </label>
+            <label className="font-semibold">
+              PDF de l’article -
+              <input
+                type="file"
+                accept="application/pdf"
+                onChange={handlePDF}
+                className="mt-1"
+              />
+              {form.pdfName && (
+                <span className="text-xs mt-1 text-gray-600">
+                  Fichier sélectionné : {form.pdfName}
+                </span>
+              )}
+            </label>
+            <label className="font-semibold">
+              Image -
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImage}
+                className="mt-1"
+              />
+              {form.imageUrl && (
+                <img
+                  src={form.imageUrl}
+                  alt="Preview"
+                  className="w-32 h-24 object-cover rounded mt-2 border"
+                />
+              )}
+            </label>
+            <div className="flex justify-end gap-4 mt-2">
               <button
-                className="absolute top-2 right-3 text-gray-500 hover:text-red-500 text-xl"
-                onClick={() => setMemberToDelete(null)}>
-                &times;
+                type="button"
+                className="px-4 py-2 rounded bg-gray-200 text-gray-700 hover:bg-gray-300"
+                onClick={() => setModalOpen(false)}>
+                Annuler
               </button>
+              <motion.button
+                whileTap={{ scale: 0.95, rotate: -6 }}
+                type="submit"
+                className="px-6 py-2 rounded bg-blue-600 text-white font-bold hover:bg-blue-700 shadow">
+                {isEdit ? "Modifier" : "Créer"}
+              </motion.button>
             </div>
-          </div>
-        )}
+          </form>
+        </Modal3D>
       </div>
     </Layout>
   );

@@ -1,16 +1,12 @@
 export default function NewsDetail({ item }) {
   const date = item.datePublication || item.date || "";
-
-  const fullImageUrl = item.imageUrl?.startsWith("http")
-    ? item.imageUrl
-    : `http://localhost:3000${item.imageUrl || ""}`;
-
   return (
     <div>
+      {/* Image principale (en haut du modal) */}
       {item.imageUrl && (
         <div className="w-full mb-5 rounded-xl overflow-hidden max-h-56">
           <img
-            src={fullImageUrl}
+            src={item.imageUrl}
             alt={item.titre}
             className="object-cover w-full h-56"
           />

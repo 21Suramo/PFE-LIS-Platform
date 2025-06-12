@@ -9,10 +9,6 @@ export default function NewsCard({ item, onOpenDetails }) {
       ? "bg-blue-100 text-blue-700"
       : "bg-yellow-100 text-yellow-700";
 
-  const fullImageUrl = item.imageUrl?.startsWith("http")
-    ? item.imageUrl
-    : `http://localhost:3000${item.imageUrl || ""}`;
-
   return (
     <motion.div
       className="
@@ -20,7 +16,7 @@ export default function NewsCard({ item, onOpenDetails }) {
     rounded-xl shadow-md border border-gray-200 group
     p-0 cursor-pointer
     transition-all
-    min-h-[270px]
+    min-h-[270px]    // hauteur uniforme, compacte
   "
       whileHover={{ scale: 1.045 }}
       onClick={() => onOpenDetails && onOpenDetails(item)}
@@ -32,7 +28,7 @@ export default function NewsCard({ item, onOpenDetails }) {
       aria-label={`Voir le détail de l'actualité/événement ${item.titre}`}>
       <div className="relative h-32 w-full rounded-t-xl overflow-hidden">
         <img
-          src={item.imageUrl ? fullImageUrl : "/default-news.jpg"}
+          src={item.imageUrl || "/default-news.jpg"}
           alt={item.titre}
           className="object-cover w-full h-full transition-transform group-hover:scale-105"
         />

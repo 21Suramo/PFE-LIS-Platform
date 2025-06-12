@@ -21,24 +21,25 @@ export default function Dashboard() {
       value: mockEvenements.filter((e) => e.origine === "INTERNE").length,
     },
   ];
-
   return (
     <Layout>
-      <div className="flex-1 h-[calc(100vh-100px)] overflow-y-auto p-8">
-        <h1 className="text-2xl font-bold text-lisBlue mb-6">
-          Dashboard Directeur
-        </h1>
-        <StatCards stats={stats} />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
-          <RecentArticles articles={mockArticles.slice(0, 5)} />
-          <RecentEvents
-            events={mockEvenements
-              .filter((e) => e.origine === "INTERNE")
-              .slice(0, 5)}
-          />
-        </div>
-        <div className="mt-10">
-          <TeamTable equipes={mockEquipes} />
+      <div className="flex">
+        <div className="flex-1 p-8">
+          <h1 className="text-2xl font-bold text-lisBlue mb-6">
+            Dashboard Directeur
+          </h1>
+          <StatCards stats={stats} />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
+            <RecentArticles articles={mockArticles.slice(0, 5)} />
+            <RecentEvents
+              events={mockEvenements
+                .filter((e) => e.origine === "INTERNE")
+                .slice(0, 5)}
+            />
+          </div>
+          <div className="mt-10">
+            <TeamTable equipes={mockEquipes} />
+          </div>
         </div>
       </div>
     </Layout>

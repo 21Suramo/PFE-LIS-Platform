@@ -1,4 +1,3 @@
-// src/components/common/Footer.jsx
 import React from "react";
 import { Link } from "react-router-dom";
 
@@ -6,38 +5,23 @@ export default function Footer() {
   return (
     <footer
       className="
+        fixed bottom-0 left-0 right-0 h-[var(--footer-height)]
         bg-[var(--color-primary-dark)] text-white
-        h-[100px] flex flex-col sm:flex-row
-        items-center justify-between
-        px-4 sm:px-6 lg:px-12
-        border-t border-[var(--color-accent-light)]
+        flex items-center justify-center
+        z-50
       "
       role="contentinfo">
-      {/* Liens légaux */}
-      <nav
-        aria-label="Liens secondaires"
-        className="flex space-x-4 mb-2 sm:mb-0">
-        <Link
-          to="/legal"
-          className="hover:underline underline-offset-4 transition">
+      <nav aria-label="Liens secondaires" className="flex space-x-6">
+        <Link to="/legal" className="hover:underline">
           Mentions légales
         </Link>
-        <Link
-          to="/contact"
-          className="hover:underline underline-offset-4 transition">
+        <Link to="/contact" className="hover:underline">
           Contact
         </Link>
-        <Link
-          to="/unihv2c"
-          className="hover:underline underline-offset-4 transition">
+        <Link to="/unihv2c" className="hover:underline">
           UNIHV2C
         </Link>
       </nav>
-
-      {/* Copyright */}
-      <div className="text-sm opacity-80 select-none">
-        © 2025 LIS – Université Hassan II
-      </div>
     </footer>
   );
 }
