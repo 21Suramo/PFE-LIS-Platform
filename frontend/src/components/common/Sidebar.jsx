@@ -38,6 +38,7 @@ export default function Sidebar({ id, isOpen, onClose }) {
   const [search, setSearch] = useState("");
   const [isDark, setIsDark] = useDarkMode();
   const sidebarRef = useRef(null);
+  const [adminOpen, setAdminOpen] = useState(false);
 
   // Fermer au ESC
   useEffect(() => {
@@ -213,26 +214,72 @@ export default function Sidebar({ id, isOpen, onClose }) {
               )}
               {user?.role === "DIRECTEUR" && (
                 <>
-                  <NavLink
-                    to="/admin/dashboard"
-                    className="flex items-center gap-3 px-3 py-2 rounded-md transition-all text-base dark:text-white hover:bg-[var(--color-accent)]/10 hover:text-[var(--color-primary)]"
-                    onClick={() => {
-                      window.scrollTo(0, 0);
-                      onClose();
-                    }}>
-                    <ShieldCheckIcon className="w-5 h-5 text-base dark:text-white" />
-                    {!collapsed && <span>Dashboard Admin</span>}
-                  </NavLink>
-                  <NavLink
-                    to="/admin/users"
-                    className="flex items-center gap-3 px-3 py-2 rounded-md transition-all text-base dark:text-white hover:bg-[var(--color-accent)]/10 hover:text-[var(--color-primary)]"
-                    onClick={() => {
-                      window.scrollTo(0, 0);
-                      onClose();
-                    }}>
-                    <UsersIcon className="w-5 h-5 text-base dark:text-white" />
-                    {!collapsed && <span>Utilisateurs</span>}
-                  </NavLink>
+                  <button
+                    onClick={() => setAdminOpen(!adminOpen)}
+                    className="flex items-center gap-3 px-3 py-2 rounded-md transition-all text-base dark:text-white hover:bg-[var(--color-accent)]/10 hover:text-[var(--color-primary)]">
+                    <div className="flex items-center gap-3">
+                      <ShieldCheckIcon />
+                      {!collapsed && <span>Admin</span>}
+                    </div>
+                    {!collapsed &&
+                      (adminOpen ? (
+                        <ChevronsLeftIcon />
+                      ) : (
+                        <ChevronsRightIcon />
+                      ))}
+                  </button>
+                  <AnimatePresence>
+                    {adminOpen && !collapsed && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        className="ml-6 flex flex-col gap-1">
+                        <NavLink
+                          to="/admin/dashboard"
+                          className="flex items-center gap-3 px-3 py-2 rounded-md transition-all text-base dark:text-white hover:bg-[var(--color-accent)]/10 hover:text-[var(--color-primary)]"
+                          onClick={onClose}>
+                          Dashboard
+                        </NavLink>
+                        <NavLink
+                          to="/admin/users"
+                          className="flex items-center gap-3 px-3 py-2 rounded-md transition-all text-base dark:text-white hover:bg-[var(--color-accent)]/10 hover:text-[var(--color-primary)]"
+                          onClick={onClose}>
+                          Utilisateurs
+                        </NavLink>
+                        <NavLink
+                          to="/admin/teams"
+                          className="flex items-center gap-3 px-3 py-2 rounded-md transition-all text-base dark:text-white hover:bg-[var(--color-accent)]/10 hover:text-[var(--color-primary)]"
+                          onClick={onClose}>
+                          Équipes
+                        </NavLink>
+                        <NavLink
+                          to="/admin/events"
+                          className="flex items-center gap-3 px-3 py-2 rounded-md transition-all text-base dark:text-white hover:bg-[var(--color-accent)]/10 hover:text-[var(--color-primary)]"
+                          onClick={onClose}>
+                          Événements
+                        </NavLink>
+                        <NavLink
+                          to="/admin/articles"
+                          className="flex items-center gap-3 px-3 py-2 rounded-md transition-all text-base dark:text-white hover:bg-[var(--color-accent)]/10 hover:text-[var(--color-primary)]"
+                          onClick={onClose}>
+                          Articles
+                        </NavLink>
+                        <NavLink
+                          to="/admin/news"
+                          className="flex items-center gap-3 px-3 py-2 rounded-md transition-all text-base dark:text-white hover:bg-[var(--color-accent)]/10 hover:text-[var(--color-primary)]"
+                          onClick={onClose}>
+                          Actualités
+                        </NavLink>
+                        <NavLink
+                          to="/admin/panel"
+                          className="flex items-center gap-3 px-3 py-2 rounded-md transition-all text-base dark:text-white hover:bg-[var(--color-accent)]/10 hover:text-[var(--color-primary)]"
+                          onClick={onClose}>
+                          ControlPanel
+                        </NavLink>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </>
               )}
             </nav>
