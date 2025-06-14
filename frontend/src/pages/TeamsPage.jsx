@@ -1,14 +1,23 @@
-import React, { useState } from "react";
+// import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Layout from "../components/common/Layout";
 import SectionTitle from "../components/UI/SectionTitle";
 import TeamList from "../components/Team/TeamList";
 import TeamDetail from "../components/Team/TeamDetail";
 import { UsersIcon } from "lucide-react";
-import { mockEquipes } from "../data/mockData";
+// import { mockEquipes } from "../data/mockData";
+import { getAllTeams } from "../services/teamService";
 import { AnimatePresence, motion } from "framer-motion";
 
 export default function TeamsPage() {
   const [selectedTeam, setSelectedTeam] = useState(null);
+  const [teams, setTeams] = useState([]);
+
+  useEffect(() => {
+    getAllTeams()
+      .then(setTeams)
+      .catch((err) => console.error(err));
+  }, []);
 
   return (
     <div className="px-4 sm:px-6 lg:px-12 py-12">
@@ -19,7 +28,7 @@ export default function TeamsPage() {
           subtitle="Découvrez les pôles d’expertise qui font vivre le laboratoire."
         />
         <TeamList
-          teams={mockEquipes}
+          teams={teams}
           onOpenDetails={(team) => setSelectedTeam(team)}
         />
 
@@ -54,3 +63,4 @@ export default function TeamsPage() {
     </div>
   );
 }
+

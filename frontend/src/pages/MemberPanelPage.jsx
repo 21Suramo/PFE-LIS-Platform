@@ -1,8 +1,18 @@
-import React, { useState } from "react";
+// import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Layout from "../components/common/Layout";
 import { useAuth } from "../contexts/AuthContext";
-import { mockArticles } from "../data/mockData";
+// import { mockArticles } from "../data/mockData";
+import {
+  getAllTeams,
+} from "../services/teamService";
+import {
+  createArticle,
+  updateArticle,
+  deleteArticle,
+  getArticlesByTeam,
+} from "../services/articleService";
 
 // Modal 3D propre et scrollable si besoin
 function Modal3D({ open, onClose, title, children }) {
@@ -38,11 +48,47 @@ function Modal3D({ open, onClose, title, children }) {
 export default function MemberPanelPage() {
   const { user } = useAuth();
   // Mes articles PENDING uniquement
-  const [localArticles, setLocalArticles] = useState(
-    mockArticles.filter(
-      (a) => a.auteurId === user?.id && a.statut === "PENDING"
-    )
-  );
+  // const [localArticles, setLocalArticles] = useState(
+  //   mockArticles.filter(
+  //     (a) => a.auteurId === user?.id && a.statut === "PENDING"
+  //   )
+  // );
+  const [localArticles, setLocalArticles] = useState([]);
+  const [team, setTeam] = useState(null);
+
+  useEffect(() => {
+    async function fetchTeam() {
+      try {
+        const teams = await getAllTeams();
+        const myTeam = teams.find(
+          (t) =>
+            t.leader?._id === user?._id ||
+            (t.membres || []).some((m) => m._id === user?._id)
+        );
+        setTeam(myTeam || null);
+      } catch (err) {
+        console.error("Failed to load teams:", err);
+      }
+    }
+    if (user) fetchTeam();
+  }, [user]);
+
+  useEffect(() => {
+    async function loadArticles() {
+      if (!team) return;
+      try {
+        const articles = await getArticlesByTeam(team._id);
+        const mine = articles.filter(
+          (a) => (a.author?._id || a.author) === user._id && a.statut === "PENDING"
+        );
+        setLocalArticles(mine);
+      } catch (err) {
+        console.error("Failed to load articles:", err);
+      }
+    }
+    loadArticles();
+  }, [team, user]);
+
   // Modal état
   const [modalOpen, setModalOpen] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
@@ -73,15 +119,18 @@ export default function MemberPanelPage() {
   }
   function openEditModal(article) {
     setForm({
-      titre: article.titre,
-      description: article.description || "",
+      // titre: article.titre,
+      // description: article.description || "",
+      titre: article.title || article.titre,
+      description: article.content || article.description || "",
       pdf: null,
       pdfName: article.pdfName || "",
       image: null,
       imageUrl: article.imageUrl || "",
     });
     setIsEdit(true);
-    setEditingId(article.id);
+    // setEditingId(article.id);
+    setEditingId(article._id || article.id);
     setModalOpen(true);
   }
   // PDF handler
@@ -103,44 +152,44 @@ export default function MemberPanelPage() {
     }));
   }
   // Soumission
-  function handleSubmit(e) {
+  // function handleSubmit(e) {
+    async function handleSubmit(e) {
     e.preventDefault();
     if (!form.titre.trim()) return alert("Titre requis !");
-    if (isEdit) {
-      setLocalArticles((prev) =>
-        prev.map((a) =>
-          a.id === editingId
-            ? {
-                ...a,
-                titre: form.titre,
-                description: form.description,
-                pdfName: form.pdfName || a.pdfName,
-                imageUrl: form.imageUrl || a.imageUrl,
-              }
-            : a
-        )
-      );
-    } else {
-      setLocalArticles((prev) => [
-        ...prev,
-        {
-          id: Math.random().toString(36).slice(2),
-          titre: form.titre,
-          description: form.description,
-          pdfName: form.pdfName,
-          imageUrl: form.imageUrl,
-          statut: "PENDING",
-          auteurId: user.id,
-          equipe: user.equipe,
-          dateSoumission: new Date().toISOString(),
-        },
-      ]);
+    try {
+      const formData = new FormData();
+      formData.append('title', form.titre);
+      formData.append('content', form.description);
+      formData.append('resume', form.description);
+      if (form.pdf) formData.append('pdf', form.pdf);
+      if (team) formData.append('equipe', team._id);
+
+      if (isEdit) {
+      const updated = await updateArticle(editingId, formData);
+        setLocalArticles((prev) =>
+          prev.map((a) => (a._id === updated._id ? updated : a))
+        );
+      } else {
+        if (!team) return;
+        const { article } = await createArticle(formData);
+        setLocalArticles((prev) => [...prev, article]);
+      }
+      setModalOpen(false);
+    } catch (err) {
+      console.error("Failed to submit article:", err);
     }
-    setModalOpen(false);
+    // setModalOpen(false);
   }
   // Suppression
-  function handleDelete(id) {
-    setLocalArticles((prev) => prev.filter((a) => a.id !== id));
+  // function handleDelete(id) {
+  //   setLocalArticles((prev) => prev.filter((a) => a.id !== id));
+  async function handleDelete(id) {
+    try {
+      await deleteArticle(id);
+      setLocalArticles((prev) => prev.filter((a) => a._id !== id));
+    } catch (err) {
+      console.error("Failed to delete article:", err);
+    }
   }
 
   // Effets 3D sur les cards
@@ -176,7 +225,7 @@ export default function MemberPanelPage() {
             localArticles.map((a) => (
               <motion.div
                 {...card3d}
-                key={a.id}
+                key={a._id || a.id}
                 className="flex items-center gap-5 border rounded-xl bg-white shadow-lg p-5">
                 {a.imageUrl && (
                   <img
@@ -187,10 +236,10 @@ export default function MemberPanelPage() {
                 )}
                 <div className="flex-1">
                   <div className="font-bold text-lg text-blue-900">
-                    {a.titre}
+                  {a.title || a.titre}
                   </div>
                   <div className="text-sm text-gray-700">
-                    {a.description?.slice(0, 150) || (
+                  {(a.content || a.description)?.slice(0, 150) || (
                       <span className="italic text-gray-400">
                         Pas de description
                       </span>
@@ -214,7 +263,7 @@ export default function MemberPanelPage() {
                     Modifier
                   </button>
                   <button
-                    onClick={() => handleDelete(a.id)}
+                    onClick={() => handleDelete(a._id || a.id)}
                     className="px-4 py-1 rounded bg-red-100 text-red-700 hover:bg-red-200 text-sm font-semibold shadow">
                     Supprimer
                   </button>

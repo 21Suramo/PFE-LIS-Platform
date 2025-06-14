@@ -1,9 +1,12 @@
 // src/pages/admin/Teams.jsx
-import React, { useState, useMemo } from "react";
+// import React, { useState, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Layout from "../../components/common/Layout";
 import TeamFormModal from "../../components/Admin/TeamFormModal";
-import { mockEquipes, mockUtilisateurs } from "../../data/mockData";
+// import { mockEquipes, mockUtilisateurs } from "../../data/mockData";
+import { getAllTeams, createTeam, updateTeam, deleteTeam as deleteTeamApi } from "../../services/teamService";
+import { getAllUsers } from "../../services/userService";
 
 const PER_PAGE = 6;
 function paginate(arr, size, page) {
@@ -11,46 +14,93 @@ function paginate(arr, size, page) {
 }
 
 export default function Teams() {
-  const [teams, setTeams] = useState(mockEquipes);
+  // const [teams, setTeams] = useState(mockEquipes);
+  const [teams, setTeams] = useState([]);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
+  const [leaders, setLeaders] = useState([]);
 
   // Récupère les responsables pour la select du modal
-  const leaders = useMemo(
-    () => mockUtilisateurs.filter((u) => u.role === "RESPONSABLE"),
-    []
-  );
+  // const leaders = useMemo(
+  //   () => mockUtilisateurs.filter((u) => u.role === "RESPONSABLE"),
+  //   []
+  // );
+  // Fetch teams list from the API
+  const fetchTeams = () => {
+    getAllTeams().then(setTeams).catch(console.error);
+  };
+
+  useEffect(() => {
+    fetchTeams();
+    getAllUsers()
+      .then((users) =>
+        setLeaders(users.filter((u) => u.role === "RESPONSABLE"))
+      )
+      .catch(console.error);
+      // Listen to team membership updates dispatched by leaders
+    window.addEventListener("teamsUpdated", fetchTeams);
+    return () => {
+      window.removeEventListener("teamsUpdated", fetchTeams);
+    };
+  }, []);
 
   // Filtre + pagination
   const filtered = teams.filter(
     (t) =>
-      t.nom.toLowerCase().includes(search.toLowerCase()) ||
+      t.name.toLowerCase().includes(search.toLowerCase()) ||
       t.specialite.toLowerCase().includes(search.toLowerCase())
   );
   const pageCount = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
   const pageTeams = paginate(filtered, PER_PAGE, page);
 
   // Save (add ou edit)
-  const saveTeam = (data) => {
-    if (editing) {
-      setTeams((prev) =>
-        prev.map((t) => (t.id === editing.id ? { ...t, ...data } : t))
-      );
-    } else {
-      setTeams((prev) => [
-        ...prev,
-        { ...data, id: Date.now(), membres: [], axeRechercheId: null },
-      ]);
+  // const saveTeam = (data) => {
+  //   if (editing) {
+  //     setTeams((prev) =>
+  //       prev.map((t) => (t.id === editing.id ? { ...t, ...data } : t))
+  //     );
+  //   } else {
+  //     setTeams((prev) => [
+  //       ...prev,
+  //       { ...data, id: Date.now(), membres: [], axeRechercheId: null },
+  //     ]);
+  const saveTeam = async (data) => {
+    const formData = new FormData();
+    formData.append('name', data.name);
+    formData.append('description', data.description);
+    formData.append('specialite', data.specialite);
+    formData.append('leader', data.leader);
+    if (data.image) formData.append('image', data.image);
+
+    try {
+      if (editing) {
+        const updated = await updateTeam(editing._id, formData);
+        setTeams((prev) =>
+          prev.map((t) => (t._id === editing._id ? updated : t))
+        );
+      } else {
+        const { team } = await createTeam(formData);
+        setTeams((prev) => [...prev, team]);
+      }
+    } catch (err) {
+      console.error(err);
     }
     setModalOpen(false);
     setEditing(null);
   };
   // Delete
-  const deleteTeam = (id) => {
-    console.log("Deleting team", id);
-    setTeams((p) => p.filter((t) => t.id !== id));
+  // const deleteTeam = (id) => {
+  //   console.log("Deleting team", id);
+  //   setTeams((p) => p.filter((t) => t.id !== id));
+  const deleteTeam = async (id) => {
+    try {
+      await deleteTeamApi(id);
+      setTeams((p) => p.filter((t) => t._id !== id));
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   // Effet 3D au survol (allégé)
@@ -104,22 +154,23 @@ export default function Teams() {
             </thead>
             <tbody>
               {pageTeams.map((t) => {
-                const leaderName =
-                  mockUtilisateurs.find((u) => u.id === t.leaderId)?.nom || "—";
+                // const leaderName =
+                //   mockUtilisateurs.find((u) => u.id === t.leaderId)?.nom || "—";
+                const leaderName = t.leader?.nom || "—";
                 return (
                   <motion.tr
-                    key={t.id}
+                    key={t._id}
                     {...row3d}
                     className="border-b hover:bg-gray-50">
-                    <td className="px-4 py-3">{t.nom}</td>
+                    <td className="px-4 py-3">{t.name}</td>
                     <td className="px-4 py-3">{t.specialite}</td>
                     <td className="px-4 py-3">{leaderName}</td>
-                    <td className="px-4 py-3">{t.membres.length}</td>
+                    <td className="px-4 py-3">{t.membres?.length || 0}</td>
                     <td className="px-4 py-3 flex gap-2">
                       <button
                         type="button"
                         onClick={() => {
-                          console.log("Editing team", t.id);
+                          console.log("Editing team", t._id);
                           setEditing(t);
                           setModalOpen(true);
                         }}
@@ -128,7 +179,7 @@ export default function Teams() {
                       </button>
                       <button
                         type="button"
-                        onClick={() => deleteTeam(t.id)}
+                        onClick={() => deleteTeam(t._id)}
                         className="px-2 py-1 bg-red-500 text-white rounded-md hover:bg-red-600 text-xs transition cursor-pointer">
                         🗑 Supprimer
                       </button>

@@ -2,43 +2,85 @@ import React, { useState, useEffect } from "react";
 import Layout from "../components/common/Layout";
 import ArticleList from "../components/Article/ArticleList";
 import ArticleDetail from "../components/Article/ArticleDetail";
-import { mockArticles } from "../data/mockData";
+// import { mockArticles } from "../data/mockData";
+import { getAllArticles } from "../services/articleService";
 import { AnimatePresence, motion } from "framer-motion";
 
 const ARTICLES_PER_PAGE = 6;
 
 export default function ArticlesPage() {
   const [selectedArticle, setSelectedArticle] = useState(null);
+  const [articles, setArticles] = useState([]);
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState("date");
   const [filterEquipe, setFilterEquipe] = useState("");
   const [filterMembre, setFilterMembre] = useState("");
   const [page, setPage] = useState(1);
 
-  // Uniques pour filtres
+  // ---------------------------------------------------Récupération des articles depuis le service
+  useEffect(() => {
+    getAllArticles()
+      .then(setArticles)
+      .catch((err) => console.error(err));
+  }, []);
+
+
+  //-------------------------------------------------------------------- Uniques pour filtres
   const uniqueEquipes = Array.from(
-    new Set(mockArticles.map((a) => a.equipe).filter(Boolean))
+    // new Set(mockArticles.map((a) => a.equipe).filter(Boolean))
+    new Set(
+      articles
+        .map((a) => a.equipe?.name || a.equipe)
+        .filter(Boolean)
+    )
   );
   const uniqueMembres = Array.from(
-    new Set(mockArticles.map((a) => a.auteur).filter(Boolean))
+    // new Set(mockArticles.map((a) => a.auteur).filter(Boolean))
+    new Set(
+      articles
+        .map((a) => a.author?.nom || a.author || a.auteur)
+        .filter(Boolean)
+    )
   );
 
-  // 1. Filtrage
-  const filtered = mockArticles
-    .filter((a) => !filterEquipe || a.equipe === filterEquipe)
-    .filter((a) => !filterMembre || a.auteur === filterMembre)
+  //---------------------------------------------------------------------------- 1. Filtrage
+  // const filtered = mockArticles
+  const filtered = articles
+    // .filter((a) => !filterEquipe || a.equipe === filterEquipe)
+    // .filter((a) => !filterMembre || a.auteur === filterMembre)
+    .filter((a) => a.statut === "APPROVED")
     .filter(
-      (article) =>
-        article.titre.toLowerCase().includes(search.toLowerCase()) ||
-        article.resume?.toLowerCase().includes(search.toLowerCase())
+    //   (article) =>
+    //     article.titre.toLowerCase().includes(search.toLowerCase()) ||
+    //     article.resume?.toLowerCase().includes(search.toLowerCase())
+    // );
+    (a) =>
+      !filterEquipe ||
+      (a.equipe?.name || a.equipe) === filterEquipe
+  )
+  .filter(
+    (a) =>
+      !filterMembre ||
+      (a.author?.nom || a.author || a.auteur) === filterMembre
+  )
+  .filter((article) => {
+    const title = (article.title || article.titre || "").toLowerCase();
+    const resume = (article.resume || "").toLowerCase();
+    return (
+      title.includes(search.toLowerCase()) ||
+      resume.includes(search.toLowerCase())
     );
+  });
 
-  // 2. Tri (date uniquement)
+  // ---------------------------------------------------------------------2. Tri (date uniquement)
   const sorted = [...filtered].sort(
-    (a, b) => new Date(b.dateSoumission) - new Date(a.dateSoumission)
+    // (a, b) => new Date(b.dateSoumission) - new Date(a.dateSoumission)
+    (a, b) =>
+      new Date(b.createdAt || b.dateSoumission) -
+      new Date(a.createdAt || a.dateSoumission)
   );
 
-  // 3. Pagination
+  // ----------------------------------------------------------------------------3. Pagination
   const maxPage = Math.ceil(sorted.length / ARTICLES_PER_PAGE);
   const paginated = sorted.slice(
     (page - 1) * ARTICLES_PER_PAGE,

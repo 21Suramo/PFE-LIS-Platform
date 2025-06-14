@@ -11,26 +11,30 @@ export default function ArticleCard({ article, onOpenDetails }) {
         if (e.key === "Enter") onOpenDetails && onOpenDetails(article);
       }}
       role="button"
-      aria-label={`Voir le détail de l'article ${article.titre}`}>
+      // aria-label={`Voir le détail de l'article ${article.titre}`}>
+      aria-label={`Voir le détail de l'article ${article.title || article.titre}`}>
       <h2 className="text-xl font-semibold text-primaryDark">
-        {article.titre}
+        {/* {article.titre} */}
+        {article.title || article.titre}
       </h2>
       <div className="mt-1 text-xs text-gray-500">
         {article.equipe && (
           <>
-            Équipe : <span className="font-semibold">{article.equipe}</span>
+            Équipe : <span className="font-semibold">{article.equipe.name || article.equipe}</span>
           </>
         )}
-        {article.auteur && (
+        {article.author || article.auteur ? (
           <>
-            {" "}
-            — Membre : <span className="font-semibold">{article.auteur}</span>
+            {" "}— Membre :
+            <span className="font-semibold">{article.author?.nom || article.author || article.auteur}</span>
           </>
-        )}
+        ) : null}
       </div>
-      <p className="mt-2 text-xs text-gray-500">{article.dateSoumission}</p>
+      <p className="mt-2 text-xs text-gray-500">
+        {new Date(article.createdAt || article.dateSoumission).toLocaleDateString()}
+      </p>
       <p className="mt-2 text-base text-gray-700 line-clamp-3">
-        {article.resume}
+        {article.resume || article.content}
       </p>
     </motion.div>
   );

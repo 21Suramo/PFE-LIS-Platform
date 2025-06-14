@@ -2,13 +2,15 @@ import React, { useState, useMemo, useEffect } from "react";
 import Layout from "../components/common/Layout";
 import EventList from "../components/Event/EventList";
 import EventDetail from "../components/Event/EventDetail";
-import { mockEvenements } from "../data/mockData";
+// import { mockEvenements } from "../data/mockData";
+import { getAllEvents } from "../services/eventService";
 import { AnimatePresence, motion } from "framer-motion";
 
 const ITEMS_PER_PAGE = 4;
 
 export default function EventsPage() {
   const [selectedEvent, setSelectedEvent] = useState(null);
+  const [events, setEvents] = useState([]);
   const [search, setSearch] = useState("");
   const [filterCategorie, setFilterCategorie] = useState(""); // ex. "Conférence en ligne"
   const [filterLieu, setFilterLieu] = useState("");
@@ -16,9 +18,17 @@ export default function EventsPage() {
   const [page, setPage] = useState(1);
 
   // 1. Filtre sur les événements internes uniquement
+  useEffect(() => {
+    getAllEvents()
+      .then(setEvents)
+      .catch((err) => console.error(err));
+  }, []);
+
   const data = useMemo(
-    () => mockEvenements.filter((e) => e.origine === "INTERNE"),
-    []
+    // () => mockEvenements.filter((e) => e.origine === "INTERNE"),
+    // []
+    () => events.filter((e) => e.origine === "INTERNE"),
+    [events]
   );
 
   // Catégories et lieux uniques pour filtres

@@ -1,20 +1,26 @@
 import React, { useState } from "react";
-import { mockArticles } from "../../data/mockData";
+// import { mockArticles } from "../../data/mockData";
 import { motion, AnimatePresence } from "framer-motion";
 
 const ARTICLES_PER_PAGE = 6;
 
 export default function TeamArticlesModal({ team, onClose }) {
   // Récupérer les objets articles à partir de team.articles (IDs)
-  const articles = (team.articles || [])
-    .map((id) => mockArticles.find((a) => a.id === id))
-    .filter(Boolean);
+  // const articles = (team.articles || [])
+  //   .map((id) => mockArticles.find((a) => a.id === id))
+  //   .filter(Boolean);
+  const articles = Array.isArray(team.articles)
+    ? team.articles
+    : team.article
+    ? [team.article]
+    : [];
 
   // Tri
   const [sortBy, setSortBy] = useState("date");
   const sortedArticles = [...articles].sort((a, b) => {
     if (sortBy === "date") {
-      return new Date(b.dateSoumission) - new Date(a.dateSoumission);
+      // return new Date(b.dateSoumission) - new Date(a.dateSoumission);
+      return new Date(b.createdAt) - new Date(a.createdAt);
     }
     if (sortBy === "statut") {
       return a.statut.localeCompare(b.statut);
@@ -50,7 +56,7 @@ export default function TeamArticlesModal({ team, onClose }) {
           onClick={(e) => e.stopPropagation()}>
           <div className="flex gap-4 mb-4 items-center">
             <h2 className="text-2xl font-bold text-lisBlue flex-1">
-              📄 Articles de {team.nom}
+              📄 Articles de {team.name}
             </h2>
             <label className="font-semibold text-gray-700">
               Trier par&nbsp;:
@@ -68,12 +74,12 @@ export default function TeamArticlesModal({ team, onClose }) {
             <ul className="space-y-3 max-h-60 overflow-y-auto">
               {paginated.map((article) => (
                 <li
-                  key={article.id}
+                key={article._id || article.id}
                   className="border border-gray-200 p-4 rounded shadow-sm bg-gray-50 flex flex-col sm:flex-row sm:items-center justify-between">
                   <div>
-                    <p className="font-medium text-gray-800">{article.titre}</p>
-                    <div className="flex gap-4 items-center text-xs text-gray-500 mt-1">
-                      📅 {article.dateSoumission}
+                  <p className="font-medium text-gray-800">{article.title}</p>
+                  <div className="flex gap-4 items-center text-xs text-gray-500 mt-1">
+                      📅 {new Date(article.createdAt).toLocaleDateString()}
                       <span
                         className={`inline-block px-2 py-1 rounded-full ${article.statut === "APPROVED" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}>
                         {article.statut}
@@ -146,12 +152,12 @@ export default function TeamArticlesModal({ team, onClose }) {
                     aria-label="Fermer">
                     &times;
                   </button>
-                  <h3 className="text-xl font-bold">{selectedArticle.titre}</h3>
+                  <h3 className="text-xl font-bold">{selectedArticle.title}</h3>
                   <div className="text-xs text-gray-500 mb-2">
-                    {selectedArticle.dateSoumission}
+                  {new Date(selectedArticle.createdAt).toLocaleDateString()}
                   </div>
                   <div className="mt-2">
-                    {selectedArticle.contenu || selectedArticle.resume}
+                    {selectedArticle.content || selectedArticle.resume}
                   </div>
                   <div className="mt-3 text-sm">
                     Statut :{" "}

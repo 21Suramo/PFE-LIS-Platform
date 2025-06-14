@@ -13,6 +13,7 @@ export default function UserFormModal({
     email: "",
     speciality: "",
     role: "MEMBRE",
+    avatar: null,
   });
   const firstInputRef = useRef(null);
 
@@ -20,11 +21,27 @@ export default function UserFormModal({
   useEffect(() => {
     if (isOpen) {
       setForm(
-        initialUser || { nom: "", email: "", speciality: "", role: "MEMBRE" }
+        // initialUser || { nom: "", email: "", speciality: "", role: "MEMBRE" }
+        initialUser
+            ? {
+              nom: initialUser.nom || "",
+              email: initialUser.email || "",
+              speciality: initialUser.speciality || "",
+              role: initialUser.role || "MEMBRE",
+              avatar: null,
+            }
+          : {
+              nom: "",
+              email: "",
+              speciality: "",
+              role: "MEMBRE",
+              avatar: null,
+            }
       );
       setTimeout(() => firstInputRef.current?.focus(), 200);
     }
-  }, [initialUser, isOpen]);
+  // }, [initialUser, isOpen]);
+}, [initialUser, isOpen]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -143,6 +160,23 @@ export default function UserFormModal({
                     <option value="RESPONSABLE">Responsable</option>
                     <option value="DIRECTEUR">Directeur</option>
                   </select>
+                </div>
+                <div>
+                  <label
+                    htmlFor="user-avatar"
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    Avatar
+                  </label>
+                  <input
+                    id="user-avatar"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, avatar: e.target.files[0] }))
+                    }
+                    className="mt-1 w-full border rounded px-3 py-2 focus:ring-2 focus:ring-blue-400"
+                  />
                 </div>
 
                 <button

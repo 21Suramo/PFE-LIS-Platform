@@ -1,8 +1,12 @@
-import React, { useState, useMemo } from "react";
+// import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { getFileUrl } from "../../utils/fileUrl";
 import Layout from "../../components/common/Layout";
 import UserFormModal from "../../components/Admin/UserFormModal";
-import { mockUtilisateurs, mockEquipes } from "../../data/mockData";
+// import { mockUtilisateurs, mockEquipes } from "../../data/mockData";
+import { getAllUsers, createUser, updateUser, deleteUser } from "../../services/userService";
+import { getAllTeams, addMemberToTeam } from "../../services/teamService";
 
 const USERS_PER_PAGE = 8;
 function paginate(array, pageSize, pageNumber) {
@@ -10,17 +14,31 @@ function paginate(array, pageSize, pageNumber) {
 }
 
 export default function Users() {
-  const [users, setUsers] = useState(mockUtilisateurs);
+  // const [users, setUsers] = useState(mockUtilisateurs);
+  const [users, setUsers] = useState([]);
+  const [teams, setTeams] = useState([]);
   const [search, setSearch] = useState("");
   const [filterRole, setFilterRole] = useState("");
   const [page, setPage] = useState(1);
   const [showModal, setShowModal] = useState(false);
   const [editUser, setEditUser] = useState(null);
 
+  useEffect(() => {
+    getAllUsers().then(setUsers).catch(console.error);
+    getAllTeams().then(setTeams).catch(console.error);
+  }, []);
+
+
   // Liste unique des rôles pour le filtre
   const roles = useMemo(
-    () => Array.from(new Set(mockUtilisateurs.map((u) => u.role))),
-    []
+    // () => Array.from(new Set(mockUtilisateurs.map((u) => u.role))),
+    // []
+    () =>
+      Array.from(
+        new Set(
+          users.map((u) => (u.role === "RESPONSABLE" ? "MEMBRE" : u.role))
+        )
+      ),
   );
 
   // Filtrer + rechercher
@@ -30,27 +48,83 @@ export default function Users() {
         u.nom.toLowerCase().includes(search.toLowerCase()) ||
         u.email.toLowerCase().includes(search.toLowerCase())
     )
-    .filter((u) => !filterRole || u.role === filterRole);
+    .filter((u) =>
+      !filterRole ||
+      (filterRole === "MEMBRE"
+        ? u.role === "MEMBRE" || u.role === "RESPONSABLE"
+        : u.role === filterRole)
+    );
 
   // Pagination
   const pageCount = Math.max(1, Math.ceil(filtered.length / USERS_PER_PAGE));
   const usersToShow = paginate(filtered, USERS_PER_PAGE, page);
 
   // Actions CRUD mock
-  const handleAddUser = (userData) => {
-    setUsers((prev) => [
-      ...prev,
-      { ...userData, id: Date.now(), avatar: "/avatars/default.jpg" },
-    ]);
-  };
-  const handleEditUser = (id, userData) => {
-    setUsers((prev) =>
-      prev.map((u) => (u.id === id ? { ...u, ...userData } : u))
-    );
-  };
-  const handleDeleteUser = (id) => {
-    setUsers((prev) => prev.filter((u) => u.id !== id));
-  };
+  // const handleAddUser = (userData) => {
+  //   setUsers((prev) => [
+  //     ...prev,
+  //     { ...userData, id: Date.now(), avatar: "/avatars/default.jpg" },
+  //   ]);
+  // };
+  // const handleEditUser = (id, userData) => {
+  //   setUsers((prev) =>
+  //     prev.map((u) => (u.id === id ? { ...u, ...userData } : u))
+  //   );
+  // };
+  // const handleDeleteUser = (id) => {
+  //   setUsers((prev) => prev.filter((u) => u.id !== id));
+  // };
+  // Actions CRUD via API
+  async function handleAddUser(userData) {
+    try {
+      const payload = {
+        name: userData.nom,
+        email: userData.email,
+        role: userData.role,
+        avatar: userData.avatar,
+        speciality: userData.speciality,
+      };
+      const { user } = await createUser(payload);
+      setUsers((prev) => [...prev, user]);
+      if (userData.teamId && userData.role !== "RESPONSABLE") {
+        try {
+          const updatedTeam = await addMemberToTeam(userData.teamId, user._id);
+          setTeams((prev) =>
+            prev.map((t) => (t._id === updatedTeam._id ? updatedTeam : t))
+          );
+        } catch (err) {
+          console.error('Failed to add member to team:', err);
+        }
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  async function handleEditUser(id, userData) {
+    try {
+      const payload = {
+        nom: userData.nom,
+        email: userData.email,
+        role: userData.role,
+        avatar: userData.avatar,
+        speciality: userData.speciality,
+      };
+      const { user } = await updateUser(id, payload);
+      setUsers((prev) => prev.map((u) => (u._id === id ? user : u)));
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  async function handleDeleteUser(id) {
+    try {
+      await deleteUser(id);
+      setUsers((prev) => prev.filter((u) => u._id !== id));
+    } catch (err) {
+      console.error(err);
+    }
+  }
 
   // Variants 3D pour chaque ligne
   const row3d = {
@@ -122,21 +196,25 @@ export default function Users() {
               {usersToShow.map((u) => {
                 // Récupère les équipes où l'utilisateur est membre ou leader
                 const userTeams =
-                  mockEquipes
+                  // mockEquipes
+                  teams
                     .filter(
-                      (eq) => eq.membres.includes(u.id) || eq.leaderId === u.id
+                      // (eq) => eq.membres.includes(u.id) || eq.leaderId === u.id
+                      (eq) =>
+                        eq.membres?.includes(u._id) || eq.leader?._id === u._id
                     )
-                    .map((eq) => eq.nom)
+                    .map((eq) => eq.name)
                     .join(", ") || "—";
 
                 return (
                   <motion.tr
-                    key={u.id}
+                    // key={u.id}
+                    key={u._id || u.id}
                     {...row3d}
                     className="border-b hover:bg-gray-50">
                     <td className="p-3">
                       <img
-                        src={u.avatar}
+                        src={getFileUrl(u.avatar)}
                         alt={u.nom}
                         className="w-8 h-8 rounded-full object-cover"
                       />
@@ -149,14 +227,19 @@ export default function Users() {
                     <td className="p-3 flex gap-2">
                       <button
                         onClick={() => {
-                          setEditUser(u);
+                          // setEditUser(u);
+                          const t = teams.find(
+                            (team) =>
+                              team.membres?.includes(u._id) || team.leader?._id === u._id
+                          );
+                          setEditUser({ ...u, teamId: t?._id || "" });
                           setShowModal(true);
                         }}
                         className="px-2 py-1 bg-yellow-400 text-white rounded-md hover:bg-yellow-500 text-xs transition">
                         Modifier
                       </button>
                       <button
-                        onClick={() => handleDeleteUser(u.id)}
+                        onClick={() => handleDeleteUser(u._id || u.id)}
                         className="px-2 py-1 bg-red-500 text-white rounded-md hover:bg-red-600 text-xs transition">
                         Supprimer
                       </button>
@@ -201,11 +284,13 @@ export default function Users() {
           isOpen={showModal}
           onClose={() => setShowModal(false)}
           onSave={(data) => {
-            if (editUser) handleEditUser(editUser.id, data);
+            // if (editUser) handleEditUser(editUser.id, data);
+            if (editUser) handleEditUser(editUser._id || editUser.id, data);
             else handleAddUser(data);
             setShowModal(false);
           }}
           initialUser={editUser}
+          teams={teams}
         />
       </div>
     </Layout>

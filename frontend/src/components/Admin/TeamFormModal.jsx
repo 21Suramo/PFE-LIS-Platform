@@ -10,9 +10,13 @@ export default function TeamFormModal({
   leaders = [],
 }) {
   const [form, setForm] = useState({
-    nom: "",
+    // nom: "",
+    name: "",
+    description: "",
     specialite: "",
-    leaderId: leaders[0]?.id || "",
+    // leaderId: leaders[0]?.id || "",
+    leader: leaders[0]?._id || "",
+    image: null,
   });
   const firstRef = useRef(null);
 
@@ -20,11 +24,26 @@ export default function TeamFormModal({
   useEffect(() => {
     if (isOpen) {
       setForm(
-        initialTeam || {
-          nom: "",
-          specialite: "",
-          leaderId: leaders[0]?.id || "",
-        }
+        // initialTeam || {
+        //   nom: "",
+        //   specialite: "",
+        //   leaderId: leaders[0]?.id || "",
+        // }
+        initialTeam
+          ? {
+              name: initialTeam.name || "",
+              description: initialTeam.description || "",
+              specialite: initialTeam.specialite || "",
+              leader: initialTeam.leader?._id || initialTeam.leader || "",
+              image: null,
+            }
+          : {
+              name: "",
+              description: "",
+              specialite: "",
+              leader: leaders[0]?._id || "",
+              image: null,
+            }
       );
       setTimeout(() => firstRef.current?.focus(), 200);
     }
@@ -67,17 +86,17 @@ export default function TeamFormModal({
               }}
               className="flex flex-col gap-4">
               <div>
-                <label htmlFor="team-nom" className="block text-sm font-medium">
+                <label htmlFor="team-name" className="block text-sm font-medium">
                   Nom de l’équipe
                 </label>
                 <input
                   ref={firstRef}
-                  id="team-nom"
+                  id="team-name"
                   type="text"
                   required
-                  value={form.nom}
+                  value={form.name}
                   onChange={(e) =>
-                    setForm((f) => ({ ...f, nom: e.target.value }))
+                    setForm((f) => ({ ...f, name: e.target.value }))
                   }
                   className="mt-1 w-full border rounded px-3 py-2 focus:ring-2 focus:ring-blue-400"
                 />
@@ -100,6 +119,34 @@ export default function TeamFormModal({
                 />
               </div>
               <div>
+                <label htmlFor="team-description" className="block text-sm font-medium">
+                  Description
+                </label>
+                <textarea
+                  id="team-description"
+                  required
+                  value={form.description}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, description: e.target.value }))
+                  }
+                  className="mt-1 w-full border rounded px-3 py-2 focus:ring-2 focus:ring-blue-400"
+                />
+              </div>
+              <div>
+                <label htmlFor="team-image" className="block text-sm font-medium">
+                  Image (optionnelle)
+                </label>
+                <input
+                  id="team-image"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, image: e.target.files[0] }))
+                  }
+                  className="mt-1 w-full border rounded px-3 py-2 focus:ring-2 focus:ring-blue-400"
+                />
+              </div>
+              <div>
                 <label
                   htmlFor="team-leader"
                   className="block text-sm font-medium">
@@ -108,13 +155,13 @@ export default function TeamFormModal({
                 <select
                   id="team-leader"
                   required
-                  value={form.leaderId}
+                  value={form.leader}
                   onChange={(e) =>
-                    setForm((f) => ({ ...f, leaderId: e.target.value }))
+                    setForm((f) => ({ ...f, leader: e.target.value }))
                   }
                   className="mt-1 w-full border rounded px-3 py-2 focus:ring-2 focus:ring-blue-400">
                   {leaders.map((l) => (
-                    <option key={l.id} value={l.id}>
+                    <option key={l._id} value={l._id}>
                       {l.nom}
                     </option>
                   ))}

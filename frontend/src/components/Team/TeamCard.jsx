@@ -1,8 +1,10 @@
-import { mockUtilisateurs } from "../../data/mockData";
+// import { mockUtilisateurs } from "../../data/mockData";
 import { motion } from "framer-motion";
+import { getFileUrl } from "../../utils/fileUrl";
 
 export default function TeamCard({ team, onOpenDetails, ...rest }) {
-  const leader = mockUtilisateurs.find((u) => u.id === team.leaderId);
+  // const leader = mockUtilisateurs.find((u) => u.id === team.leaderId);
+  const leader = team.leader;
 
   return (
     <motion.div
@@ -14,20 +16,20 @@ export default function TeamCard({ team, onOpenDetails, ...rest }) {
         if (e.key === "Enter") onOpenDetails && onOpenDetails(team);
       }}
       role="button"
-      aria-label={`Voir le détail de l'équipe ${team.nom}`}>
+      aria-label={`Voir le détail de l'équipe ${team.name}`}>
       <img
-        src={team.imageUrl}
-        alt={team.nom}
+        src={getFileUrl(team.imageUrl)}
+        alt={team.name}
         className="w-full h-44 object-cover group-hover:scale-105 transition-transform duration-300"
       />
       <div className="p-6 flex flex-col items-center gap-2">
         <h3 className="text-xl font-bold text-lisBlue text-center">
-          {team.nom}
+          {team.name}
         </h3>
         {leader && (
           <div className="flex items-center gap-3 mb-1">
             <img
-              src={leader.avatar}
+              src={getFileUrl(leader.avatar)}
               alt={leader.nom}
               className="w-9 h-9 rounded-full object-cover border-2 border-lisBlue shadow"
             />

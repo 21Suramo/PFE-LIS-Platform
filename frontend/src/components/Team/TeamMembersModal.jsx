@@ -1,14 +1,16 @@
 import React, { useState } from "react";
-import { mockUtilisateurs, mockArticles } from "../../data/mockData";
+// import { mockUtilisateurs, mockArticles } from "../../data/mockData";
 import { motion, AnimatePresence } from "framer-motion";
+import { getFileUrl } from "../../utils/fileUrl";
 
 export default function TeamMembersModal({ team, onClose }) {
   const [selectedMember, setSelectedMember] = useState(null);
 
   // Récupère les membres comme objets depuis leur id
-  const membres = team.membres
-    .map((id) => mockUtilisateurs.find((u) => u.id === id))
-    .filter(Boolean);
+  // const membres = team.membres
+  //   .map((id) => mockUtilisateurs.find((u) => u.id === id))
+  //   .filter(Boolean);
+  const membres = Array.isArray(team.membres) ? team.membres : [];
 
   return (
     <AnimatePresence>
@@ -25,16 +27,16 @@ export default function TeamMembersModal({ team, onClose }) {
           exit={{ scale: 0.95, opacity: 0 }}
           onClick={(e) => e.stopPropagation()}>
           <h2 className="text-2xl font-bold text-lisBlue mb-6">
-            👥 Membres de {team.nom}
+            👥 Membres de {team.name}
           </h2>
 
           <div className="flex gap-4 overflow-x-auto pb-3">
             {membres.map((member) => (
               <div
-                key={member.id}
+              key={member._id || member.id}
                 className="min-w-[220px] bg-gray-50 rounded-xl p-4 shadow flex flex-col items-center relative group">
                 <img
-                  src={member.avatar}
+                  src={getFileUrl(member.avatar)}
                   alt={member.nom}
                   className="w-16 h-16 rounded-full object-cover border-2 border-lisBlue shadow"
                 />
@@ -94,23 +96,26 @@ export default function TeamMembersModal({ team, onClose }) {
                   </h3>
                   {selectedMember.articles?.length > 0 ? (
                     <ul className="space-y-2">
-                      {selectedMember.articles.map((artId) => {
-                        const art = mockArticles.find((a) => a.id === artId);
-                        return (
-                          <li
-                            key={artId}
-                            className="bg-gray-100 px-4 py-2 rounded shadow-sm">
-                            <p className="font-medium">{art?.titre}</p>
+                      {selectedMember.articles.map((art) => (
+                        <li
+                          key={art._id || art.id}
+                          className="bg-gray-100 px-4 py-2 rounded shadow-sm"
+                        >
+                          <p className="font-medium">{art.title}</p>
+                          {art.createdAt && (
                             <p className="text-xs text-gray-500">
-                              {art?.dateSoumission}
+                              {new Date(art.createdAt).toLocaleDateString()}
                             </p>
+                            )}
+                          {art.statut && (
                             <span
-                              className={`inline-block text-xs px-2 py-1 rounded ml-2 ${art?.statut === "APPROVED" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}>
-                              {art?.statut}
+                            className={`inline-block text-xs px-2 py-1 rounded ml-2 ${art.statut === "APPROVED" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}
+                            >
+                              {art.statut}
                             </span>
+                          )}
                           </li>
-                        );
-                      })}
+                        ))}
                     </ul>
                   ) : (
                     <div className="italic text-gray-500">

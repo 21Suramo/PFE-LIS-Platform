@@ -15,7 +15,7 @@ export default function TeamList({ teams, onOpenDetails, ...rest }) {
       <AnimatePresence>
         {teams.map((team) => (
           <motion.div
-            key={team.id}
+          key={team._id || team.id}
             variants={{
               hidden: { opacity: 0, y: 40, scale: 0.9 },
               visible: { opacity: 1, y: 0, scale: 1 },

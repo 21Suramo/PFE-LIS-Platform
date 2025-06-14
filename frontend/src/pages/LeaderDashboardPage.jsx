@@ -1,15 +1,26 @@
-import React, { useState } from "react";
+// import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { getFileUrl } from "../utils/fileUrl";
 import Layout from "../components/common/Layout";
 import { useAuth } from "../contexts/AuthContext";
-import { mockEquipes, mockArticles, mockUtilisateurs } from "../data/mockData";
+// import { mockEquipes, mockArticles, mockUtilisateurs } from "../data/mockData";
+import { getAllTeams, addMemberToTeam, removeMemberFromTeam } from "../services/teamService";
+import { getAllArticles } from "../services/articleService";
+import { getAllUsers } from "../services/userService";
+import {
+  approveArticle,
+  deleteArticle,
+  returnArticleToPending,
+} from "../services/articleService";
 
-// Pagination utilitaire
+
+// -----------------------------------------------------------------------Pagination utilitaire
 function paginate(array, pageSize, pageNumber) {
   return array.slice((pageNumber - 1) * pageSize, pageNumber * pageSize);
 }
 
-// Modal 3D stylée
+//----------------------------------------------------------------------------- Modal 3D stylée
 function Modal3D({ open, onClose, children, title }) {
   if (!open) return null;
   return (
@@ -41,7 +52,7 @@ function Modal3D({ open, onClose, children, title }) {
   );
 }
 
-// Pagination simple
+// --------------------------------------------------------------------------------Pagination simple
 function Pagination({ page, pageCount, onPageChange }) {
   return (
     <div className="flex items-center gap-2 mt-4 justify-center">
@@ -67,24 +78,70 @@ function Pagination({ page, pageCount, onPageChange }) {
 export default function LeaderDashboardPage() {
   const { user } = useAuth();
 
-  // RESPONSABLE & EQUIPE
-  const leader = mockUtilisateurs.find((u) => u.email === user?.email);
-  const team = mockEquipes.find((eq) => eq.leaderId === leader?.id);
+  // ----------------------------------------------------------------------------RESPONSABLE & EQUIPE
+  // const leader = mockUtilisateurs.find((u) => u.email === user?.email);
+  // const team = mockEquipes.find((eq) => eq.leaderId === leader?.id);
+  const [users, setUsers] = useState([]);
+  const [teams, setTeams] = useState([]);
+  const [articles, setArticles] = useState([]);
+  const [allArticles, setAllArticles] = useState([]);
 
-  // MEMBRES dynamique
-  const [teamMembers, setTeamMembers] = useState(
-    team
-      ? team.membres.map((uid) => mockUtilisateurs.find((u) => u.id === uid))
-      : []
-  );
-  const availableUsers = mockUtilisateurs.filter(
+  // ----------------------------------------------------------------------MEMBRES dynamique
+  // const [teamMembers, setTeamMembers] = useState(
+  //   team
+  //     ? team.membres.map((uid) => mockUtilisateurs.find((u) => u.id === uid))
+  //     : []
+  // );
+  // const availableUsers = mockUtilisateurs.filter(
+    useEffect(() => {
+      getAllUsers()
+        .then(setUsers)
+        .catch((err) => console.error(err));
+      getAllTeams()
+        .then(setTeams)
+        .catch((err) => console.error(err));
+      getAllArticles()
+        .then(setArticles)
+        .catch((err) => console.error(err));
+    }, []);
+  
+    const leader = users.find((u) => u.email === user?.email);
+    const team = teams.find((eq) => eq.leader?._id === leader?._id);
+  
+    const [teamMembers, setTeamMembers] = useState([]);
+  
+    useEffect(() => {
+      if (team) {
+        // setTeamMembers(team.membres || []);
+        const members = [team.leader, ...(team.membres || [])].filter(Boolean);
+        const unique = [];
+        members.forEach((m) => {
+          if (!unique.some((u) => u._id === m._id)) unique.push(m);
+        });
+        setTeamMembers(unique);
+      }
+    }, [team]);
+  
+    useEffect(() => {
+      if (team) {
+        setAllArticles(
+          articles.filter(
+            (a) =>
+              (a.equipe?._id || a.equipe) === team._id
+          )
+        );
+      }
+    }, [team, articles]);
+  
+    const availableUsers = users.filter(
     (u) =>
-      !teamMembers.some((m) => m.id === u.id) &&
-      u.id !== leader?.id &&
-      u.role !== "DIRECTEUR"
+      // !teamMembers.some((m) => m.id === u.id) &&
+      // u.id !== leader?.id &&
+      !teamMembers.some((m) => m._id === u._id) &&
+      u._id !== leader?._id
   );
 
-  // Recherche membres
+  // ---------------------------------------------------------------------Recherche membres
   const [searchMember, setSearchMember] = useState("");
   const filteredMembers = teamMembers.filter((member) =>
     (member.nom + " " + (member.speciality ?? ""))
@@ -92,12 +149,12 @@ export default function LeaderDashboardPage() {
       .includes(searchMember.toLowerCase())
   );
 
-  // ARTICLES
-  const [allArticles, setAllArticles] = useState(
-    mockArticles.filter((a) => a.equipe === team?.nom)
-  );
+  //-------------------------------------------------------------------------------- ARTICLES
+  // const [allArticles, setAllArticles] = useState(
+  //   mockArticles.filter((a) => a.equipe === team?.nom)
+  // );
   const [tab, setTab] = useState("PENDING");
-  // Recherche articles
+  // --------------------------------------------------------------------------Recherche articles
   const [searchArticle, setSearchArticle] = useState("");
   const filteredArticles = allArticles.filter(
     (a) =>
@@ -106,7 +163,7 @@ export default function LeaderDashboardPage() {
         (a.auteur ?? "").toLowerCase().includes(searchArticle.toLowerCase()))
   );
 
-  // PAGINATION articles
+  // --------------------------------------------------------------------------------PAGINATION articles
   const ARTICLES_PER_PAGE = 2;
   const [articlePage, setArticlePage] = useState(1);
   const articlePageCount = Math.max(
@@ -119,7 +176,7 @@ export default function LeaderDashboardPage() {
     articlePage
   );
 
-  // PAGINATION membres
+  //---------------------------------------------------------------------------- PAGINATION membres
   const MEMBERS_PER_PAGE = 2;
   const [memberPage, setMemberPage] = useState(1);
   const memberPageCount = Math.max(
@@ -128,47 +185,128 @@ export default function LeaderDashboardPage() {
   );
   const membersToShow = paginate(filteredMembers, MEMBERS_PER_PAGE, memberPage);
 
-  // MODAL état
+  // ----------------------------------------------------------------------------MODAL état
   const [modalOpen, setModalOpen] = useState(false);
 
-  // ARTICLES LOGIC
-  function handleApproveArticle(id) {
-    setAllArticles((prev) =>
-      prev.map((a) => (a.id === id ? { ...a, statut: "APPROVED" } : a))
-    );
-  }
-  function handleDeleteArticle(id) {
-    setAllArticles((prev) => prev.filter((a) => a.id !== id));
-  }
-  function handleReturnPending(id) {
-    setAllArticles((prev) =>
-      prev.map((a) => (a.id === id ? { ...a, statut: "PENDING" } : a))
-    );
-    setTab("PENDING");
-  }
-
-  // MEMBRES LOGIC
-  function handleAddMember(user) {
-    setTeamMembers((prev) => [...prev, user]);
-    setModalOpen(false);
-    if (
-      (teamMembers.length + 1) % MEMBERS_PER_PAGE === 1 &&
-      membersToShow.length === MEMBERS_PER_PAGE
-    ) {
-      setMemberPage(memberPageCount + 1);
+  // ----------------------------------------------------------------------ARTICLES LOGIC
+  // function handleApproveArticle(id) {
+  //   setAllArticles((prev) =>
+  //     prev.map((a) => (a.id === id ? { ...a, statut: "APPROVED" } : a))
+  //   );
+  // }
+  async function handleApproveArticle(id) {
+    try {
+      await approveArticle(id);
+      setAllArticles((prev) =>
+        prev.map((a) => (a._id === id ? { ...a, statut: "APPROVED" } : a))
+      );
+    } catch (err) {
+      console.error("Error approving article:", err);
     }
   }
-  function handleRemoveMember(id) {
-    setTeamMembers((prev) => prev.filter((u) => u.id !== id));
-    if ((teamMembers.length - 1) % MEMBERS_PER_PAGE === 0 && memberPage > 1) {
-      setMemberPage(memberPage - 1);
+
+  // function handleDeleteArticle(id) {
+  //   setAllArticles((prev) => prev.filter((a) => a.id !== id));
+  // }
+  async function handleDeleteArticle(id) {
+    try {
+      await deleteArticle(id);
+      setAllArticles((prev) => prev.filter((a) => a._id !== id));
+    } catch (err) {
+      console.error("Error deleting article:", err);
+    }
+  }
+
+  // function handleReturnPending(id) {
+  //   setAllArticles((prev) =>
+  //     prev.map((a) => (a.id === id ? { ...a, statut: "PENDING" } : a))
+  //   );
+  //   setTab("PENDING");
+  // }
+
+  async function handleReturnPending(id) {
+    try {
+      await returnArticleToPending(id);
+      setAllArticles((prev) =>
+        prev.map((a) => (a._id === id ? { ...a, statut: "PENDING" } : a))
+      );
+      setTab("PENDING");
+    } catch (err) {
+      console.error("Error returning article to pending:", err);
+    }
+  }
+
+  // -----------------------------------------------------------------------------MEMBRES LOGIC
+  // function handleAddMember(user) {
+  //   setTeamMembers((prev) => [...prev, user]);
+  //   setModalOpen(false);
+  //   if (
+  //     (teamMembers.length + 1) % MEMBERS_PER_PAGE === 1 &&
+  //     membersToShow.length === MEMBERS_PER_PAGE
+  //   ) {
+  //     setMemberPage(memberPageCount + 1);
+  async function handleAddMember(user) {
+    if (!team) return;
+    try {
+      const updatedTeam = await addMemberToTeam(team._id, user._id);
+      // setTeamMembers(updatedTeam.membres || []);
+      const members = [
+        updatedTeam.leader,
+        ...(updatedTeam.membres || [])
+      ].filter(Boolean);
+      const unique = [];
+      members.forEach((m) => {
+        if (!unique.some((u) => u._id === m._id)) unique.push(m);
+      });
+      setTeamMembers(unique);
+      setTeams((prev) => prev.map((t) => (t._id === updatedTeam._id ? updatedTeam : t)));
+      setModalOpen(false);
+      if (
+        updatedTeam.membres.length % MEMBERS_PER_PAGE === 1 &&
+        membersToShow.length === MEMBERS_PER_PAGE
+      ) {
+        setMemberPage(memberPageCount + 1);
+      }
+
+       // Notify other interfaces that team membership changed
+       window.dispatchEvent(new Event('teamsUpdated'));
+
+    } catch (err) {
+      console.error('Failed to add member:', err);
+    }
+  }
+  async function handleRemoveMember(id) {
+    if (!team) return;
+    try {
+      const updatedTeam = await removeMemberFromTeam(team._id, id);
+      const members = [
+        updatedTeam.leader,
+        ...(updatedTeam.membres || [])
+      ].filter(Boolean);
+      const unique = [];
+      members.forEach((m) => {
+        if (!unique.some((u) => u._id === m._id)) unique.push(m);
+      });
+      setTeamMembers(unique);
+      setTeams((prev) => prev.map((t) => (t._id === updatedTeam._id ? updatedTeam : t)));
+      if (
+        memberPage > 1 &&
+        updatedTeam.membres.length % MEMBERS_PER_PAGE === 0 &&
+        membersToShow.length === 1
+      ) {
+        setMemberPage(memberPage - 1);
+      }
+    } catch (err) {
+      console.error('Failed to remove member:', err);
     }
   }
 
   // 3D FX
   const card3d = {
-    whileHover: { scale: 1.025, rotateY: 5, boxShadow: "0 6px 32px #bdd8ff70" },
-    whileTap: { scale: 0.97, rotateY: -4 },
+    // whileHover: { scale: 1.025, rotateY: 5, boxShadow: "0 6px 32px #bdd8ff70" },
+    // whileTap: { scale: 0.97, rotateY: -4 },
+    whileHover: { scale: 1.025, boxShadow: "0 6px 32px #bdd8ff70" },
+    whileTap: { scale: 0.97 },
     transition: { type: "spring", stiffness: 150, damping: 20 },
   };
 
@@ -211,13 +349,13 @@ export default function LeaderDashboardPage() {
           {membersToShow.length > 0 ? (
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {membersToShow.map((member) => (
-                  <motion.div
-                    {...card3d}
-                    key={member.id}
-                    className="flex items-center border rounded-xl shadow-lg p-3 bg-white">
+              {membersToShow.map((member) => (
+                    <motion.div
+                      {...card3d}
+                      key={member._id}
+                      className="flex items-center border rounded-xl shadow-lg p-3 bg-white">
                     <img
-                      src={member.avatar}
+                      src={getFileUrl(member.avatar)}
                       alt={member.nom}
                       className="w-12 h-12 rounded-full object-cover mr-3 border"
                     />
@@ -232,11 +370,11 @@ export default function LeaderDashboardPage() {
                         Rôle : {member.role}
                       </div>
                     </div>
-                    {member.id !== leader?.id && (
+                    {member._id !== leader?._id && (
                       <motion.button
                         whileTap={{ scale: 0.87, rotate: -4 }}
                         className="ml-4 px-3 py-1 text-sm text-red-600 rounded hover:bg-red-50 font-medium transition"
-                        onClick={() => handleRemoveMember(member.id)}>
+                        onClick={() => handleRemoveMember(member._id)}>
                         Retirer
                       </motion.button>
                     )}
@@ -271,7 +409,7 @@ export default function LeaderDashboardPage() {
                   key={u.id}
                   className="flex items-center border rounded p-2 bg-blue-50">
                   <img
-                    src={u.avatar}
+                    src={getFileUrl(u.avatar)}
                     alt={u.nom}
                     className="w-9 h-9 rounded-full object-cover mr-2 border"
                   />
@@ -335,7 +473,7 @@ export default function LeaderDashboardPage() {
                 {articlesToShow.map((article) => (
                   <motion.div
                     {...card3d}
-                    key={article.id}
+                    key={article._id}
                     className="flex items-center justify-between border rounded-xl p-4 shadow-xl bg-white">
                     <div>
                       <h3 className="text-lg font-bold text-blue-900">
@@ -357,7 +495,7 @@ export default function LeaderDashboardPage() {
                       {tab === "PENDING" && (
                         <motion.button
                           whileTap={{ scale: 0.92, rotate: -6 }}
-                          onClick={() => handleApproveArticle(article.id)}
+                          onClick={() => handleApproveArticle(article._id)}
                           className="bg-green-600 text-white py-2 px-4 rounded hover:bg-green-800 transition shadow font-bold">
                           Valider
                         </motion.button>
@@ -366,13 +504,13 @@ export default function LeaderDashboardPage() {
                         <>
                           <motion.button
                             whileTap={{ scale: 0.92, rotate: -6 }}
-                            onClick={() => handleDeleteArticle(article.id)}
+                            onClick={() => handleDeleteArticle(article._id)}
                             className="bg-red-600 text-white py-1 px-3 rounded hover:bg-red-800 transition shadow text-sm font-semibold">
                             Supprimer
                           </motion.button>
                           <motion.button
                             whileTap={{ scale: 0.92, rotate: 6 }}
-                            onClick={() => handleReturnPending(article.id)}
+                            onClick={() => handleReturnPending(article._id)}
                             className="bg-yellow-500 text-white py-1 px-3 rounded hover:bg-yellow-600 transition shadow text-sm font-semibold">
                             Retourner en attente
                           </motion.button>

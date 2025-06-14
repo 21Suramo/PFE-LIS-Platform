@@ -1,33 +1,41 @@
 import React, { useState } from "react";
-import { mockUtilisateurs, mockArticles } from "../../data/mockData";
+// import { mockUtilisateurs, mockArticles } from "../../data/mockData";
 import { motion, AnimatePresence } from "framer-motion";
+import { getFileUrl } from "../../utils/fileUrl";
 
 export default function TeamDetail({ team }) {
   const [selectedArticle, setSelectedArticle] = useState(null);
   const [showProjects, setShowProjects] = useState(false);
 
-  const leader = mockUtilisateurs.find((u) => u.id === team.leaderId);
-  const membres = team.membres
-    .map((id) => mockUtilisateurs.find((u) => u.id === id))
-    .filter(Boolean);
-  const articles = (team.articles || [])
-    .map((id) => mockArticles.find((a) => a.id === id))
-    .filter(Boolean);
+  // const leader = mockUtilisateurs.find((u) => u.id === team.leaderId);
+  // const membres = team.membres
+  //   .map((id) => mockUtilisateurs.find((u) => u.id === id))
+  //   .filter(Boolean);
+  // const articles = (team.articles || [])
+  //   .map((id) => mockArticles.find((a) => a.id === id))
+  //   .filter(Boolean);
+  const leader = team.leader;
+  const membres = Array.isArray(team.membres) ? team.membres : [];
+  const articles = Array.isArray(team.articles)
+    ? team.articles
+    : team.article
+    ? [team.article]
+    : [];
 
   return (
     <div className="space-y-8">
       {/* En-tête et leader */}
       <div className="text-center">
         <img
-          src={team.imageUrl}
-          alt={team.nom}
+          src={getFileUrl(team.imageUrl)}
+          alt={team.name}
           className="w-full max-h-56 object-cover rounded-xl shadow"
         />
-        <h1 className="text-2xl font-bold text-lisBlue mt-4">{team.nom}</h1>
+        <h1 className="text-2xl font-bold text-lisBlue mt-4">{team.name}</h1>
         {leader && (
           <div className="mt-2 flex items-center justify-center gap-2">
             <img
-              src={leader.avatar}
+              src={getFileUrl(leader.avatar)}
               alt={leader.nom}
               className="w-10 h-10 rounded-full border object-cover"
             />
@@ -43,7 +51,7 @@ export default function TeamDetail({ team }) {
         <h2 className="text-lg font-semibold text-gray-800 mb-1">
           🧾 Description
         </h2>
-        <p className="text-gray-700">{team.objectif || team.description}</p>
+        <p className="text-gray-700">{team.objectifs || team.description}</p>
       </div>
 
       {/* Membres : carrousel horizontal */}
@@ -53,10 +61,10 @@ export default function TeamDetail({ team }) {
           {membres.length ? (
             membres.map((member) => (
               <div
-                key={member.id}
+              key={member._id || member.id}
                 className="min-w-[180px] bg-gray-100 p-3 rounded shadow-sm flex items-center gap-3">
                 <img
-                  src={member.avatar}
+                  src={getFileUrl(member.avatar)}
                   alt={member.nom}
                   className="w-8 h-8 rounded-full object-cover border"
                 />
@@ -83,15 +91,16 @@ export default function TeamDetail({ team }) {
           <ul className="mt-2 space-y-2">
             {articles.map((article) => (
               <li
-                key={article.id}
+              key={article._id || article.id}
                 className="bg-white p-3 border rounded shadow-sm text-gray-700 cursor-pointer hover:bg-gray-50 transition"
                 onClick={() => setSelectedArticle(article)}>
-                <p className="font-medium">{article.titre}</p>
+                <p className="font-medium">{article.title}</p>
                 <p className="text-xs text-gray-500 mt-1">
-                  📅 {article.dateSoumission}
+                  📅 {new Date(article.createdAt).toLocaleDateString()}
                 </p>
                 <span
-                  className={`inline-block text-xs px-2 py-1 rounded ml-2 ${article.statut === "APPROVED" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}>
+                  className={`inline-block text-xs px-2 py-1 rounded ml-2 ${article.statut === "APPROVED" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}
+                  >
                   {article.statut}
                 </span>
               </li>
@@ -125,12 +134,12 @@ export default function TeamDetail({ team }) {
                 aria-label="Fermer">
                 &times;
               </button>
-              <h3 className="text-xl font-bold">{selectedArticle.titre}</h3>
+              <h3 className="text-xl font-bold">{selectedArticle.title}</h3>
               <div className="text-xs text-gray-500 mb-2">
-                {selectedArticle.dateSoumission}
+              {new Date(selectedArticle.createdAt).toLocaleDateString()}
               </div>
               <div className="mt-2">
-                {selectedArticle.contenu || selectedArticle.resume}
+                {selectedArticle.content || selectedArticle.resume}
               </div>
               <div className="mt-3 text-sm">
                 Statut :{" "}

@@ -68,14 +68,19 @@ export default function LoginModal({ isOpen, onClose }) {
     setLoading(true);
     try {
       if (tab === "login") {
-        await login(email, password, remember);
+        // await login(email, password, remember);
+        await login(email, password);
         onClose();
       } else {
         await resetPassword(email);
         setMessage("Un email de réinitialisation a été envoyé.");
       }
-    } catch {
-      setError("Une erreur est survenue. Veuillez réessayer.");
+    // } catch {
+    //   setError("Une erreur est survenue. Veuillez réessayer.");
+  } catch (err) {
+    const msg = err?.response?.data?.message || err.message ||
+      "Une erreur est survenue. Veuillez réessayer.";
+    setError(msg);
     } finally {
       setLoading(false);
     }

@@ -2,7 +2,9 @@ import React, { useState, useMemo, useEffect } from "react";
 import Layout from "../components/common/Layout";
 import NewsList from "../components/News/NewsList";
 import NewsDetail from "../components/News/NewsDetail";
-import { mockActualites, mockEvenements } from "../data/mockData";
+// import { mockActualites, mockEvenements } from "../data/mockData";
+import { getAllNews } from "../services/newsService";
+import { getAllEvents } from "../services/eventService";
 import { AnimatePresence, motion } from "framer-motion";
 
 // Fonction utilitaire distance (km, Haversine)
@@ -28,6 +30,8 @@ const ITEMS_PER_PAGE = 4;
 
 export default function NewsPage() {
   const [selectedItem, setSelectedItem] = useState(null);
+  const [news, setNews] = useState([]);
+  const [events, setEvents] = useState([]);
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState(""); // "Actualité" ou "Événement"
   const [filterLieu, setFilterLieu] = useState("");
@@ -35,15 +39,27 @@ export default function NewsPage() {
   const [userVille, setUserVille] = useState("");
   const [page, setPage] = useState(1);
 
-  // Fusion (actualités + événements externes)
+  useEffect(() => {
+    getAllNews()
+      .then(setNews)
+      .catch((err) => console.error(err));
+    getAllEvents()
+      .then(setEvents)
+      .catch((err) => console.error(err));
+  }, []);
+
+  // ---------------------------------------------------------------Fusion (actualités + événements externes)
   const data = useMemo(
     () => [
-      ...mockActualites.map((a) => ({ ...a, type: "Actualité" })),
-      ...mockEvenements
+      // ...mockActualites.map((a) => ({ ...a, type: "Actualité" })),
+      // ...mockEvenements
+      ...news.map((a) => ({ ...a, type: "Actualité" })),
+      ...events
         .filter((e) => e.origine === "EXTERNE")
         .map((e) => ({ ...e, type: "Événement" })),
     ],
-    []
+    // []
+    [news, events]
   );
 
   // Recherche, filtrage
