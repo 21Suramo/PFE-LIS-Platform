@@ -15,41 +15,26 @@ app.use(express.json());
 
 
 // --- Function to create default users ---
+/*
 const createDefaultDirector = async () => {
   const existing = await User.findOne({ email: process.env.DIRECTOR_EMAIL });
   if (existing) return;
 
-  const hashedPassword = await bcrypt.hash(process.env.DIRECTOR_PASSWORD, 10);
+  const hashedPassword = await bcrypt.hash('ab123', 10);
 
   await User.create({
-    nom: 'Fatiha Directrice',
-    email: process.env.DIRECTOR_EMAIL,
+    nom: 'Fatiha Hasna CHAMLAL',
+    email: 'hasna.chamlal@lis.ma',
     motDePasseHash: hashedPassword, 
     role: 'DIRECTEUR',
-    speciality: 'Gestion du laboratoire',
-    avatar: '/avatars/fatiha.jpg',
+    speciality: 'Ph.D., Statistics, Data Analysis, Data Science, Mohammed V University, Rabat Morocco.',      
+    avatar: '/uploads/chamlal.png',
   });
 
   console.log('Default DIRECTEUR user created');
 };
 
-const createDefaultMember = async () => {
-  const existing = await User.findOne({ email: 'anas@lis.ma' });
-  if (existing) return;
-
-  const hashedPassword = await bcrypt.hash('AnasMembre123!', 10);
-
-  await User.create({
-    nom: 'anas Membre',
-    email: 'anas@lis.ma',
-    motDePasseHash: hashedPassword, 
-    role: 'MEMBRE',
-    speciality: 'Développement Web',
-    avatar: '/avatars/default.jpg',
-  });
-
-  console.log('Default MEMBRE user created');
-};
+*/
 // --- End of function ---
 
 // MongoDB Connection
@@ -57,8 +42,8 @@ mongoose.connect(process.env.MONGODB_URI || "mongodb+srv://abdelouahidaitsi:8XOD
   .then(() => {
     console.log('MongoDB connected');
     // Call the function to create the default Director account after successful connection
-    createDefaultDirector();
-    createDefaultMember();
+    //  createDefaultDirector();
+    
   })
   .catch(
     (err) => console.log('MongoDB connection error:', err)

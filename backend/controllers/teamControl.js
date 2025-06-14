@@ -5,6 +5,9 @@ const path = require("path");
 // Create a team
 exports.createTeam = async (req, res) => {
   try {
+    if (!['RESPONSABLE', 'DIRECTEUR'].includes(req.user.role)) {
+      return res.status(403).json({ message: 'Access denied' });
+    }
     const { name, description, objectifs, specialite, membres, article, leader } = req.body;
 
     if (!name || !description || !specialite || !leader) {
@@ -13,13 +16,16 @@ exports.createTeam = async (req, res) => {
 
     const imageUrl = req.file ? `/uploads/${req.file.filename}` : "";
 
+    const parsedMembers = JSON.parse(membres || "[]");
+    if (leader && !parsedMembers.includes(leader)) parsedMembers.push(leader);
+
     const newTeam = new Team({
       name,
       description,
       objectifs,
       specialite,
       leader,
-      membres: JSON.parse(membres || "[]"),
+      membres: parsedMembers,
       article: article || null,
       imageUrl,
     });
@@ -27,9 +33,10 @@ exports.createTeam = async (req, res) => {
     await newTeam.save();
 
     const populated = await Team.findById(newTeam._id)
-      .populate('leader', 'nom email avatar speciality')
-      .populate('membres', 'nom email avatar speciality')
-      .populate('article', 'title');
+      .populate('leader', 'nom email avatar speciality role')
+      .populate('membres', 'nom email avatar speciality role')
+      .populate('article', 'title')
+      .populate('articles', 'title statut createdAt resume');
 
     res.status(201).json({ message: "Team created!", team: populated });
   } catch (error) {
@@ -43,9 +50,10 @@ exports.createTeam = async (req, res) => {
 exports.getAllTeams = async (req, res) => {
   try {
     const teams = await Team.find()
-      .populate('leader', 'nom email avatar speciality')
-      .populate('membres', 'nom email avatar speciality')
-      .populate('article', 'title');
+      .populate('leader', 'nom email avatar speciality role')
+      .populate('membres', 'nom email avatar speciality role')
+      .populate('article', 'title')
+      .populate('articles', 'title statut createdAt resume');
 
     res.status(200).json(teams);
   } catch (error) {
@@ -57,9 +65,10 @@ exports.getAllTeams = async (req, res) => {
 exports.getTeamById = async (req, res) => {
   try {
     const team = await Team.findById(req.params.id)
-      .populate('leader', 'nom email avatar speciality')
-      .populate('membres', 'nom email avatar speciality')
-      .populate('article', 'title');
+      .populate('leader', 'nom email avatar speciality role')
+      .populate('membres', 'nom email avatar speciality role')
+      .populate('article', 'title')
+      .populate('articles', 'title statut createdAt resume');
 
     if (!team) {
       return res.status(404).json({ message: 'Team not found' });
@@ -86,12 +95,15 @@ exports.updateTeam = async (req, res) => {
 
     const imageUrl = req.file ? `/uploads/${req.file.filename}` : undefined;
 
+    const parsedMembers = membres ? JSON.parse(membres) : [];
+    if (leader && !parsedMembers.includes(leader)) parsedMembers.push(leader);
+
     const updateFields = {
       name,
       description,
       objectifs,
       specialite,
-      membres: membres ? JSON.parse(membres) : [],
+      membres: parsedMembers,
       article,
       leader,
     };
@@ -103,9 +115,10 @@ exports.updateTeam = async (req, res) => {
       updateFields,
       { new: true, runValidators: true }
     )
-      .populate('leader', 'nom email avatar speciality')
-      .populate('membres', 'nom email avatar speciality')
-      .populate('article', 'title');
+      .populate('leader', 'nom email avatar speciality role')
+      .populate('membres', 'nom email avatar speciality role')
+      .populate('article', 'title')
+      .populate('articles', 'title statut createdAt resume');
 
     if (!updatedTeam) {
       return res.status(404).json({ message: 'Team not found for update.' });
@@ -129,5 +142,68 @@ exports.deleteTeam = async (req, res) => {
     res.status(200).json({ message: 'Team deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: 'Failed to delete team', error: error.message });
+  }
+};
+
+// Add a member to a team
+exports.addMember = async (req, res) => {
+  try {
+    if (!['RESPONSABLE', 'DIRECTEUR'].includes(req.user.role)) {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+    const { userId } = req.body;
+    if (!userId) {
+      return res.status(400).json({ message: 'Missing userId' });
+    }
+
+    const team = await Team.findById(req.params.id);
+    if (!team) {
+      return res.status(404).json({ message: 'Team not found' });
+    }
+
+    if (!team.membres.includes(userId)) {
+      team.membres.push(userId);
+      await team.save();
+    }
+
+    const populatedTeam = await Team.findById(req.params.id)
+      .populate('leader', 'nom email avatar speciality role')
+      .populate('membres', 'nom email avatar speciality role')
+      .populate('article', 'title')
+      .populate('articles', 'title statut createdAt resume');
+
+    res.status(200).json(populatedTeam);
+  } catch (error) {
+    console.error('Error adding member to team:', error);
+    res.status(500).json({ message: 'Failed to add member', error: error.message });
+  }
+};
+
+// Remove a member from a team
+exports.removeMember = async (req, res) => {
+  try {
+    if (!['RESPONSABLE', 'DIRECTEUR'].includes(req.user.role)) {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    const { id, userId } = req.params;
+    const team = await Team.findById(id);
+    if (!team) {
+      return res.status(404).json({ message: 'Team not found' });
+    }
+
+    team.membres = team.membres.filter((m) => m.toString() !== userId);
+    await team.save();
+
+    const populatedTeam = await Team.findById(id)
+      .populate('leader', 'nom email avatar speciality role')
+      .populate('membres', 'nom email avatar speciality role')
+      .populate('article', 'title')
+      .populate('articles', 'title statut createdAt resume');
+
+    res.status(200).json(populatedTeam);
+  } catch (error) {
+    console.error('Error removing member from team:', error);
+    res.status(500).json({ message: 'Failed to remove member', error: error.message });
   }
 };

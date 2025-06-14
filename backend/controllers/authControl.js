@@ -87,3 +87,16 @@ exports.loginUser = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+exports.resetPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    // In a real app, send email with reset link or token
+    res.json({ message: 'Password reset instructions sent' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};

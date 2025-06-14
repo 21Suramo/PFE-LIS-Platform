@@ -9,13 +9,11 @@ const teamSchema = new mongoose.Schema({
   objectifs: { type: String, required: false },
   specialite: { type: String, required: true }, 
   imageUrl: { type: String, required: false }, 
-  leader: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   dateCreation: { type: Date, default: Date.now },
   membres: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   article: { type: mongoose.Schema.Types.ObjectId, ref: "Article" },
-  leader: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // ✅ new
-  imageUrl: { type: String }, // ✅ new
-
+  articles: [{ type: mongoose.Schema.Types.ObjectId, ref: "Article" }],
+  leader: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, 
 });
 
 

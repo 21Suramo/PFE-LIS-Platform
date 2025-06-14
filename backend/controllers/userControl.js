@@ -5,6 +5,7 @@ const bcrypt = require('bcryptjs');
 exports.createTeamLeader = async (req, res) => {
   try {
     const { name, email, password, avatar, speciality, role } = req.body;
+    const avatarPath = req.file ? `/uploads/${req.file.filename}` : avatar;
 
     if (!name || !email || !password) {
         return res.status(400).json({ message: 'Please provide name, email, and password.'});
@@ -21,12 +22,12 @@ exports.createTeamLeader = async (req, res) => {
     const userRole = role && User.schema.path('role').enumValues.includes(role) ? role : 'RESPONSABLE';
 
     const newUser = await User.create({
-      nom: name, 
+      nom: name,
       email,
       motDePasseHash: hashedPassword,
-      role: userRole, 
-      avatar,    
-      speciality 
+      role: userRole,
+      avatar,
+      speciality
     });
 
     const userResponse = newUser.toObject();
@@ -38,6 +39,57 @@ exports.createTeamLeader = async (req, res) => {
     res.status(500).json({ message: 'Failed to create user', error: err.message });
   }
 };
+
+// Create a general user with a default password
+exports.createUser = async (req, res) => {
+  try {
+    const { name, email, role, avatar, speciality } = req.body;
+    const avatarPath = req.file ? `/uploads/${req.file.filename}` : avatar;
+
+    if (!name || !email) {
+      return res
+        .status(400)
+        .json({ message: 'Please provide name and email.' });
+    }
+
+    const userExists = await User.findOne({ email });
+    if (userExists) {
+      return res
+        .status(400)
+        .json({ message: 'User already exists with this email' });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash('ab123', salt);
+
+    const userRole =
+      role && User.schema.path('role').enumValues.includes(role)
+        ? role
+        : 'MEMBRE';
+
+    const newUser = await User.create({
+      nom: name,
+      email,
+      motDePasseHash: hashedPassword,
+      role: userRole,
+      avatar: avatarPath,
+      speciality,
+    });
+
+    const userResponse = newUser.toObject();
+    delete userResponse.motDePasseHash;
+
+    res
+      .status(201)
+      .json({ message: `User with role ${userRole} created`, user: userResponse });
+  } catch (err) {
+    console.error('Error creating user:', err);
+    res
+      .status(500)
+      .json({ message: 'Failed to create user', error: err.message });
+  }
+};
+
 
 
 // Get all users
@@ -73,6 +125,7 @@ exports.getUserById = async (req, res) => {
 exports.updateUser = async (req, res) => {
   try {
     const { nom, email, role, avatar, speciality, password } = req.body;
+    const avatarPath = req.file ? `/uploads/${req.file.filename}` : avatar;
     const userIdToUpdate = req.params.id;
 
 
@@ -85,7 +138,7 @@ exports.updateUser = async (req, res) => {
     const updateData = {};
     if (nom) updateData.nom = nom;
     if (email) updateData.email = email; // Consider email uniqueness validation if changed
-    if (avatar) updateData.avatar = avatar;
+    if (avatarPath) updateData.avatar = avatarPath;
     if (speciality) updateData.speciality = speciality;
 
     // Restrict role changes to admins

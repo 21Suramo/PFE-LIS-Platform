@@ -9,7 +9,7 @@ const userSchema = new mongoose.Schema({
   motDePasseHash: { type: String, required: true },
   role: {
     type: String,
-    enum: ['DIRECTEUR', 'RESPONSABLE', 'MEMBRE', 'DOCTORANT', 'superAdmin'],
+    enum: ['DIRECTEUR', 'RESPONSABLE', 'MEMBRE', 'DOCTORANT'],
     default: 'MEMBRE'
   },
   avatar: { type: String, required: false },

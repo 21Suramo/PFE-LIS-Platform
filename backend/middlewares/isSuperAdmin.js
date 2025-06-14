@@ -1,5 +1,6 @@
 const isSuperAdmin = (req, res, next) => {
-  if (req.user && req.user.role === 'superAdmin') {
+  
+  if (req.user && req.user.role === 'DIRECTEUR') {
     next(); // Authorized
   } else {
     res.status(403).json({ message: 'Access denied. Super Admins only.' });
