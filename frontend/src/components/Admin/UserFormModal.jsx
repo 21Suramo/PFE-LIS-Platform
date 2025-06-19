@@ -14,6 +14,8 @@ export default function UserFormModal({
     speciality: "",
     role: "MEMBRE",
     avatar: null,
+    link1: "",
+    link2: "",
   });
   const firstInputRef = useRef(null);
 
@@ -25,18 +27,22 @@ export default function UserFormModal({
         initialUser
             ? {
               nom: initialUser.nom || "",
-              email: initialUser.email || "",
-              speciality: initialUser.speciality || "",
-              role: initialUser.role || "MEMBRE",
-              avatar: null,
-            }
-          : {
-              nom: "",
-              email: "",
-              speciality: "",
-              role: "MEMBRE",
-              avatar: null,
-            }
+                email: initialUser.email || "",
+                speciality: initialUser.speciality || "",
+                role: initialUser.role || "MEMBRE",
+                avatar: null,
+                link1: initialUser.link1 || "",
+                link2: initialUser.link2 || "",
+              }
+            : {
+                nom: "",
+                email: "",
+                speciality: "",
+                role: "MEMBRE",
+                avatar: null,
+                link1: "",
+                link2: "",
+              }
       );
       setTimeout(() => firstInputRef.current?.focus(), 200);
     }
@@ -54,7 +60,7 @@ export default function UserFormModal({
         <FocusTrap>
           {/* backdrop */}
           <motion.div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+            className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 backdrop-blur-sm p-4 overflow-y-auto"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -64,19 +70,20 @@ export default function UserFormModal({
               role="dialog"
               aria-modal="true"
               aria-labelledby="user-modal-title"
-              className="relative bg-white rounded-2xl shadow-2xl w-11/12 md:w-3/4 lg:w-1/2 xl:w-1/3 p-6"
+              className="bg-white rounded-2xl shadow-2xl w-11/12 md:w-3/4 lg:w-1/2 xl:w-1/3 mt-20 mb-10 overflow-hidden"
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.8, opacity: 0 }}
               transition={{ type: "spring", stiffness: 200, damping: 25 }}
               onClick={(e) => e.stopPropagation()}>
-              {/* close */}
-              <button
-                aria-label="Fermer"
-                className="absolute top-3 right-3 text-2xl text-gray-500 hover:text-red-500"
-                onClick={onClose}>
-                &times;
-              </button>
+               <div className="max-h-[80vh] overflow-y-auto p-6 relative">
+                {/* close */}
+                <button
+                  aria-label="Fermer"
+                  className="absolute top-3 right-3 text-2xl text-gray-500 hover:text-red-500"
+                  onClick={onClose}>
+                  &times;
+                </button>
 
               {/* titre */}
               <h2
@@ -143,6 +150,40 @@ export default function UserFormModal({
 
                 <div>
                   <label
+                    htmlFor="user-link1"
+                    className="block text-sm font-medium text-gray-700">
+                    Lien 1
+                  </label>
+                  <input
+                    id="user-link1"
+                    type="text"
+                    value={form.link1}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, link1: e.target.value }))
+                    }
+                    className="mt-1 w-full border rounded px-3 py-2 focus:ring-2 focus:ring-blue-400"
+                  />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="user-link2"
+                    className="block text-sm font-medium text-gray-700">
+                    Lien 2
+                  </label>
+                  <input
+                    id="user-link2"
+                    type="text"
+                    value={form.link2}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, link2: e.target.value }))
+                    }
+                    className="mt-1 w-full border rounded px-3 py-2 focus:ring-2 focus:ring-blue-400"
+                  />
+                </div>
+
+                <div>
+                  <label
                     htmlFor="user-role"
                     className="block text-sm font-medium text-gray-700">
                     Rôle
@@ -185,6 +226,7 @@ export default function UserFormModal({
                   {initialUser ? "Sauvegarder" : "Ajouter"}
                 </button>
               </form>
+              </div>
             </motion.div>
           </motion.div>
         </FocusTrap>

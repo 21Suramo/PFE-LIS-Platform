@@ -87,6 +87,10 @@ export default function MemberPanelPage() {
       }
     }
     loadArticles();
+    window.addEventListener("articlesUpdated", loadArticles);
+    return () => {
+      window.removeEventListener("articlesUpdated", loadArticles);
+    };
   }, [team, user]);
 
   // Modal état
@@ -99,8 +103,7 @@ export default function MemberPanelPage() {
     description: "",
     pdf: null,
     pdfName: "",
-    image: null,
-    imageUrl: "",
+    link: "",
   });
 
   // Ouvrir modal (ajout ou édition)
@@ -110,8 +113,7 @@ export default function MemberPanelPage() {
       description: "",
       pdf: null,
       pdfName: "",
-      image: null,
-      imageUrl: "",
+      link: "",
     });
     setIsEdit(false);
     setEditingId(null);
@@ -125,8 +127,7 @@ export default function MemberPanelPage() {
       description: article.content || article.description || "",
       pdf: null,
       pdfName: article.pdfName || "",
-      image: null,
-      imageUrl: article.imageUrl || "",
+      link: article.link || "",
     });
     setIsEdit(true);
     // setEditingId(article.id);
@@ -142,15 +143,6 @@ export default function MemberPanelPage() {
       pdfName: file ? file.name : "",
     }));
   }
-  // Image handler (affichage preview)
-  function handleImage(e) {
-    const file = e.target.files[0];
-    setForm((prev) => ({
-      ...prev,
-      image: file,
-      imageUrl: file ? URL.createObjectURL(file) : "",
-    }));
-  }
   // Soumission
   // function handleSubmit(e) {
     async function handleSubmit(e) {
@@ -162,6 +154,7 @@ export default function MemberPanelPage() {
       formData.append('content', form.description);
       formData.append('resume', form.description);
       if (form.pdf) formData.append('pdf', form.pdf);
+      if (form.link) formData.append('link', form.link);
       if (team) formData.append('equipe', team._id);
 
       if (isEdit) {
@@ -169,10 +162,12 @@ export default function MemberPanelPage() {
         setLocalArticles((prev) =>
           prev.map((a) => (a._id === updated._id ? updated : a))
         );
+        window.dispatchEvent(new Event("articlesUpdated"));
       } else {
         if (!team) return;
         const { article } = await createArticle(formData);
         setLocalArticles((prev) => [...prev, article]);
+        window.dispatchEvent(new Event("articlesUpdated"));
       }
       setModalOpen(false);
     } catch (err) {
@@ -187,6 +182,7 @@ export default function MemberPanelPage() {
     try {
       await deleteArticle(id);
       setLocalArticles((prev) => prev.filter((a) => a._id !== id));
+      window.dispatchEvent(new Event("articlesUpdated"));
     } catch (err) {
       console.error("Failed to delete article:", err);
     }
@@ -227,13 +223,7 @@ export default function MemberPanelPage() {
                 {...card3d}
                 key={a._id || a.id}
                 className="flex items-center gap-5 border rounded-xl bg-white shadow-lg p-5">
-                {a.imageUrl && (
-                  <img
-                    src={a.imageUrl}
-                    alt="Aperçu"
-                    className="w-20 h-20 rounded-lg object-cover border"
-                  />
-                )}
+                
                 <div className="flex-1">
                   <div className="font-bold text-lg text-blue-900">
                   {a.title || a.titre}
@@ -321,20 +311,17 @@ export default function MemberPanelPage() {
               )}
             </label>
             <label className="font-semibold">
-              Image -
+            Lien vers l’article
               <input
-                type="file"
-                accept="image/*"
-                onChange={handleImage}
-                className="mt-1"
+                type="url"
+                value={form.link}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, link: e.target.value }))
+                }
+                className="w-full mt-1 px-3 py-2 border rounded focus:outline-blue-400"
+                placeholder="https://example.com"
               />
-              {form.imageUrl && (
-                <img
-                  src={form.imageUrl}
-                  alt="Preview"
-                  className="w-32 h-24 object-cover rounded mt-2 border"
-                />
-              )}
+              
             </label>
             <div className="flex justify-end gap-4 mt-2">
               <button

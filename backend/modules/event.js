@@ -34,6 +34,7 @@ const eventSchema = new mongoose.Schema({
 
   // Existing fields
   image: { type: String, required: false }, // Frontend uses imageUrl, but we're keeping backend names for now
+  pdf: { type: String, required: false }, // Event flyer in PDF format
   createdAt: { type: Date, default: Date.now }
 });
 

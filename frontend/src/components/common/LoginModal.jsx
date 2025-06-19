@@ -24,7 +24,8 @@ const spring3D = {
   damping: 14,
 };
 
-export default function LoginModal({ isOpen, onClose }) {
+// export default function LoginModal({ isOpen, onClose }) {
+export default function LoginModal({ isOpen, onClose, onChangePassword }) {
   const { login, resetPassword } = useAuth();
   const [tab, setTab] = useState("login");
   const [email, setEmail] = useState("");
@@ -283,6 +284,21 @@ export default function LoginModal({ isOpen, onClose }) {
                   onClick={() => setTab("login")}
                   className="text-sm text-lisBlue font-medium hover:underline">
                   Se connecter
+                </button>
+              </div>
+            )}
+
+            {tab === "login" && (
+              <div className="mt-2 text-center">
+                <button
+                  type="button"
+                  onClick={() => {
+                    onClose();
+                    onChangePassword?.();
+                  }}
+                  className="text-sm text-lisBlue font-medium hover:underline"
+                >
+                  Changer le mot de passe
                 </button>
               </div>
             )}

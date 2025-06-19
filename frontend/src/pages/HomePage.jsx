@@ -6,7 +6,9 @@ import HomeHero from "../components/Home/HomeHero";
 export default function HomePage() {
   return (
     <Layout>
-      <HomeHero />
+      <div className="h-full w-full">
+        <HomeHero />
+      </div>
     </Layout>
   );
 }

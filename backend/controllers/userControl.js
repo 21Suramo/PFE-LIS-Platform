@@ -4,7 +4,7 @@ const bcrypt = require('bcryptjs');
 
 exports.createTeamLeader = async (req, res) => {
   try {
-    const { name, email, password, avatar, speciality, role } = req.body;
+    const { name, email, password, avatar, speciality, role, link1, link2 } = req.body;
     const avatarPath = req.file ? `/uploads/${req.file.filename}` : avatar;
 
     if (!name || !email || !password) {
@@ -27,7 +27,9 @@ exports.createTeamLeader = async (req, res) => {
       motDePasseHash: hashedPassword,
       role: userRole,
       avatar,
-      speciality
+      speciality,
+      link1,
+      link2
     });
 
     const userResponse = newUser.toObject();
@@ -43,7 +45,7 @@ exports.createTeamLeader = async (req, res) => {
 // Create a general user with a default password
 exports.createUser = async (req, res) => {
   try {
-    const { name, email, role, avatar, speciality } = req.body;
+    const { name, email, role, avatar, speciality, link1, link2 } = req.body;
     const avatarPath = req.file ? `/uploads/${req.file.filename}` : avatar;
 
     if (!name || !email) {
@@ -74,6 +76,8 @@ exports.createUser = async (req, res) => {
       role: userRole,
       avatar: avatarPath,
       speciality,
+      link1,
+      link2,
     });
 
     const userResponse = newUser.toObject();
@@ -124,7 +128,7 @@ exports.getUserById = async (req, res) => {
 
 exports.updateUser = async (req, res) => {
   try {
-    const { nom, email, role, avatar, speciality, password } = req.body;
+    const { nom, email, role, avatar, speciality, password, link1, link2 } = req.body;
     const avatarPath = req.file ? `/uploads/${req.file.filename}` : avatar;
     const userIdToUpdate = req.params.id;
 
@@ -140,6 +144,8 @@ exports.updateUser = async (req, res) => {
     if (email) updateData.email = email; // Consider email uniqueness validation if changed
     if (avatarPath) updateData.avatar = avatarPath;
     if (speciality) updateData.speciality = speciality;
+    if (link1) updateData.link1 = link1;
+    if (link2) updateData.link2 = link2;
 
     // Restrict role changes to admins
     if (role && (req.user.role === 'superAdmin' || req.user.role === 'DIRECTEUR')) {

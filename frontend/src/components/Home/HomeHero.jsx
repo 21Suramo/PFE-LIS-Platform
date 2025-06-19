@@ -15,17 +15,13 @@ export default function HomeHero() {
 
   return (
     <section
-      className="absolute inset-x-0 bg-cover bg-center bg-no-repeat"
-      style={{
-        top: "var(--header-height)",
-        bottom: "var(--footer-height)",
-        backgroundImage: `url(${heroImage})`,
-      }}>
+    className="relative h-full w-full flex items-center justify-center bg-cover bg-center bg-no-repeat"
+    style={{ backgroundImage: `url(${heroImage})` }}>
       {/* Overlay sombre + flou */}
-      <div className="absolute inset-0 bg-gradient-to-br from-black/40 via-black/20 to-transparent backdrop-blur-sm" />
+      <div className="absolute inset-0 bg-gradient-to-br from-black/40 via-black/20 to-transparent backdrop-blur-sm z-0" />
 
       {/* Contenu centré */}
-      <div className="relative z-10 flex flex-col items-center justify-center h-full px-md text-center">
+      <div className="relative z-10 flex flex-col items-center justify-center w-full max-w-screen-lg px-4 text-center">
         <motion.h1
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}

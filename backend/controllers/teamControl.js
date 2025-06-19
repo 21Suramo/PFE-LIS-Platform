@@ -33,10 +33,10 @@ exports.createTeam = async (req, res) => {
     await newTeam.save();
 
     const populated = await Team.findById(newTeam._id)
-      .populate('leader', 'nom email avatar speciality role')
-      .populate('membres', 'nom email avatar speciality role')
-      .populate('article', 'title')
-      .populate('articles', 'title statut createdAt resume');
+      .populate('leader', 'nom email avatar speciality role link1 link2')
+      .populate('membres', 'nom email avatar speciality role link1 link2')
+      .populate('article', 'title content resume')
+      .populate('articles', 'title statut createdAt resume content');
 
     res.status(201).json({ message: "Team created!", team: populated });
   } catch (error) {
@@ -50,10 +50,10 @@ exports.createTeam = async (req, res) => {
 exports.getAllTeams = async (req, res) => {
   try {
     const teams = await Team.find()
-      .populate('leader', 'nom email avatar speciality role')
-      .populate('membres', 'nom email avatar speciality role')
-      .populate('article', 'title')
-      .populate('articles', 'title statut createdAt resume');
+      .populate('leader', 'nom email avatar speciality role link1 link2')
+      .populate('membres', 'nom email avatar speciality role link1 link2')
+      .populate('article', 'title content resume')
+      .populate('articles', 'title statut createdAt resume content');
 
     res.status(200).json(teams);
   } catch (error) {
@@ -65,10 +65,10 @@ exports.getAllTeams = async (req, res) => {
 exports.getTeamById = async (req, res) => {
   try {
     const team = await Team.findById(req.params.id)
-      .populate('leader', 'nom email avatar speciality role')
-      .populate('membres', 'nom email avatar speciality role')
-      .populate('article', 'title')
-      .populate('articles', 'title statut createdAt resume');
+      .populate('leader', 'nom email avatar speciality role link1 link2')
+      .populate('membres', 'nom email avatar speciality role link1 link2')
+      .populate('article', 'title content resume')
+      .populate('articles', 'title statut createdAt resume content');
 
     if (!team) {
       return res.status(404).json({ message: 'Team not found' });
@@ -115,10 +115,10 @@ exports.updateTeam = async (req, res) => {
       updateFields,
       { new: true, runValidators: true }
     )
-      .populate('leader', 'nom email avatar speciality role')
-      .populate('membres', 'nom email avatar speciality role')
-      .populate('article', 'title')
-      .populate('articles', 'title statut createdAt resume');
+      .populate('leader', 'nom email avatar speciality role link1 link2')
+      .populate('membres', 'nom email avatar speciality role link1 link2')
+      .populate('article', 'title content resume')
+      .populate('articles', 'title statut createdAt resume content');
 
     if (!updatedTeam) {
       return res.status(404).json({ message: 'Team not found for update.' });
@@ -161,16 +161,27 @@ exports.addMember = async (req, res) => {
       return res.status(404).json({ message: 'Team not found' });
     }
 
+    const existing = await Team.findOne({
+      $or: [{ leader: userId }, { membres: userId }],
+    });
+    if (existing && existing._id.toString() !== team._id.toString()) {
+      return res
+        .status(400)
+        .json({ message: 'User already belongs to another team' });
+    }
+
+
     if (!team.membres.includes(userId)) {
       team.membres.push(userId);
       await team.save();
     }
 
     const populatedTeam = await Team.findById(req.params.id)
-      .populate('leader', 'nom email avatar speciality role')
-      .populate('membres', 'nom email avatar speciality role')
-      .populate('article', 'title')
-      .populate('articles', 'title statut createdAt resume');
+      .populate('leader', 'nom email avatar speciality role link1 link2')
+      .populate('membres', 'nom email avatar speciality role link1 link2')
+      .populate('article', 'title content resume')
+      .populate('articles', 'title statut createdAt resume content');
+
 
     res.status(200).json(populatedTeam);
   } catch (error) {
@@ -196,10 +207,10 @@ exports.removeMember = async (req, res) => {
     await team.save();
 
     const populatedTeam = await Team.findById(id)
-      .populate('leader', 'nom email avatar speciality role')
-      .populate('membres', 'nom email avatar speciality role')
-      .populate('article', 'title')
-      .populate('articles', 'title statut createdAt resume');
+      .populate('leader', 'nom email avatar speciality role link1 link2')
+      .populate('membres', 'nom email avatar speciality role link1 link2')
+      .populate('article', 'title content resume')
+      .populate('articles', 'title statut createdAt resume content');
 
     res.status(200).json(populatedTeam);
   } catch (error) {

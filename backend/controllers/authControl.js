@@ -6,7 +6,7 @@ const jwt = require('jsonwebtoken');
 exports.registerUser = async (req, res) => {
   try {
    
-    const { name, email, password, role, avatar, speciality } = req.body;
+    const { name, email, password, role, avatar, speciality, link1, link2 } = req.body;
 
     if (!name || !email || !password) {
         return res.status(400).json({ message: 'Please provide name, email, and password.'});
@@ -26,7 +26,9 @@ exports.registerUser = async (req, res) => {
       motDePasseHash: hashedPassword,
       role: userRole,
       avatar,
-      speciality
+      speciality,
+      link1,
+      link2
     });
 
     const tokenPayload = { 
@@ -45,7 +47,9 @@ exports.registerUser = async (req, res) => {
             email: user.email,
             role: user.role,
             avatar: user.avatar,
-            speciality: user.speciality
+            speciality: user.speciality,
+            link1: user.link1,
+            link2: user.link2
         }
     });
   } catch (err) {
@@ -80,7 +84,9 @@ exports.loginUser = async (req, res) => {
             email: user.email,
             role: user.role,
             avatar: user.avatar,
-            speciality: user.speciality
+            speciality: user.speciality,
+            link1: user.link1,
+            link2: user.link2
         }
     });
   } catch (err) {
@@ -96,6 +102,38 @@ exports.resetPassword = async (req, res) => {
 
     // In a real app, send email with reset link or token
     res.json({ message: 'Password reset instructions sent' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.changePassword = async (req, res) => {
+  try {
+    const { email, oldPassword, newPassword, confirmPassword } = req.body;
+
+    if (!email || !oldPassword || !newPassword || !confirmPassword) {
+      return res
+        .status(400)
+        .json({ message: 'Email, old password, new password and confirmation are required' });
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    const isMatch = await bcrypt.compare(oldPassword, user.motDePasseHash);
+    if (!isMatch) {
+      return res.status(400).json({ message: 'Old password is incorrect' });
+    }
+
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({ message: 'Passwords do not match' });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    user.motDePasseHash = await bcrypt.hash(newPassword, salt);
+    await user.save();
+
+    res.json({ message: 'Password updated successfully' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

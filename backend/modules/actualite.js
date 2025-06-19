@@ -7,6 +7,7 @@ const actualiteSchema = new mongoose.Schema({
   contenu: { type: String, required: true },
   datePublication: { type: Date, default: Date.now },
   imageUrl: { type: String, required: false },
+  pdf: { type: String, required: false },
   pinned: { type: Boolean, default: false },
   // Optional: Add a 'type' or 'categorie' if you need to distinguish news types
   // type: { type: String, default: 'Général' }

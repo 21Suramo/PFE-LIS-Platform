@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const upload = require('../middlewares/upload'); // for image handling
+const upload = require('../middlewares/upload'); // for file handling
 const authMiddleware = require('../middlewares/authMidleware');
 const actualiteController = require('../controllers/actualitControl');
 
@@ -8,7 +8,10 @@ const actualiteController = require('../controllers/actualitControl');
 router.post(
   '/',
   authMiddleware,
-  upload.single('image'), 
+  upload.fields([
+    { name: 'image', maxCount: 1 },
+    { name: 'pdf', maxCount: 1 },
+  ]),
   actualiteController.createActualite
 );
 
@@ -22,7 +25,10 @@ router.get('/:id', actualiteController.getActualiteById);
 router.put(
   '/:id',
   authMiddleware,
-  upload.single('image'), // ⬅️ update image if re-uploaded
+  upload.fields([
+    { name: 'image', maxCount: 1 },
+    { name: 'pdf', maxCount: 1 },
+  ]),
   actualiteController.updateActualite
 );
 

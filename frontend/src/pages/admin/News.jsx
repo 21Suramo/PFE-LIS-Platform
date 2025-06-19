@@ -1,25 +1,52 @@
-import React, { useState } from "react";
+// import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Layout from "../../components/common/Layout";
 import NewsFormModal from "../../components/Admin/NewsFormModal";
-import { mockActualites } from "../../data/mockData";
+import {
+  getAllNews,
+  createNews,
+  updateNews,
+  deleteNews as deleteNewsApi,
+} from "../../services/newsService";
 
 export default function News() {
-  const [newsList, setNewsList] = useState(mockActualites);
+  const [newsList, setNewsList] = useState([]);
   const [search, setSearch] = useState("");
   const [showNewsModal, setShowNewsModal] = useState(false);
+  const [editNews, setEditNews] = useState(null);
 
-  const handleAddNews = (news) =>
-    setNewsList([
-      ...newsList,
-      {
-        ...news,
-        id: Date.now(),
-        datePublication: new Date().toISOString().slice(0, 10),
-      },
-    ]);
+  useEffect(() => {
+    getAllNews()
+      .then(setNewsList)
+      .catch(console.error);
+  }, []);
 
-  const handleDeleteNews = (id) =>
-    setNewsList(newsList.filter((n) => n.id !== id));
+  async function handleSaveNews(formData) {
+    try {
+      if (editNews) {
+        const updated = await updateNews(editNews._id, formData);
+        setNewsList((prev) =>
+          prev.map((n) => (n._id === editNews._id ? updated : n))
+        );
+      } else {
+        const { actualite } = await createNews(formData);
+        setNewsList((prev) => [...prev, actualite]);
+      }
+      setShowNewsModal(false);
+      setEditNews(null);
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  async function handleDeleteNews(id) {
+    try {
+      await deleteNewsApi(id);
+      setNewsList((prev) => prev.filter((n) => n._id !== id));
+    } catch (err) {
+      console.error(err);
+    }
+  }
 
   const filtered = newsList.filter((news) =>
     news.titre.toLowerCase().includes(search.toLowerCase())
@@ -42,17 +69,21 @@ export default function News() {
             />
             <button
               className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 font-medium"
-              onClick={() => setShowNewsModal(true)}>
+              onClick={() => {
+                setEditNews(null);
+                setShowNewsModal(true);
+              }}>
               ➕ Ajouter actualité
             </button>
           </div>
           <NewsFormModal
             isOpen={showNewsModal}
-            onClose={() => setShowNewsModal(false)}
-            onSave={(news) => {
-              handleAddNews(news);
+            onClose={() => {
               setShowNewsModal(false);
+              setEditNews(null);
             }}
+            onSave={handleSaveNews}
+            initialNews={editNews}
           />
           <div className="bg-white/90 rounded-2xl shadow p-2 overflow-x-auto">
             <table className="w-full text-sm">
@@ -66,14 +97,22 @@ export default function News() {
               <tbody>
                 {filtered.map((news) => (
                   <tr
-                    key={news.id}
+                  key={news._id}
                     className="border-b last:border-b-0 hover:bg-blue-50">
                     <td className="py-2">{news.titre}</td>
-                    <td>{news.datePublication}</td>
-                    <td>
+                    <td>{new Date(news.datePublication).toLocaleDateString()}</td>
+                    <td className="flex gap-1">
+                      <button
+                        className="px-2 py-1 bg-yellow-400 text-white rounded text-xs hover:bg-yellow-500"
+                        onClick={() => {
+                          setEditNews(news);
+                          setShowNewsModal(true);
+                        }}>
+                        Modifier
+                      </button>
                       <button
                         className="px-2 py-1 bg-red-500 text-white rounded text-xs hover:bg-red-600"
-                        onClick={() => handleDeleteNews(news.id)}>
+                        onClick={() => handleDeleteNews(news._id)}>
                         Supprimer
                       </button>
                     </td>

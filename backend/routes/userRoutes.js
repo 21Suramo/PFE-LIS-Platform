@@ -9,7 +9,7 @@ const upload = require('../middlewares/upload');
 
 router.get('/', async (req, res) => {
   try {
-    const users = await User.find({}, 'nom email role avatar speciality');
+    const users = await User.find({}, 'nom email role avatar speciality link1 link2');
     res.status(200).json(users);
   } catch (error) {
     res.status(500).json({ message: 'Erreur lors du chargement des utilisateurs', error: error.message });

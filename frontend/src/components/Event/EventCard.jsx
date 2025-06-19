@@ -1,7 +1,9 @@
 import { motion } from "framer-motion";
+import { getFileUrl } from "../../utils/fileUrl";
+import { formatDate } from "../../utils/date";
 
 export default function EventCard({ event, onOpenDetails }) {
-  const date = event.date || "";
+  const date = formatDate(event.date);
 
   return (
     <motion.div
@@ -13,28 +15,28 @@ export default function EventCard({ event, onOpenDetails }) {
         if (e.key === "Enter") onOpenDetails && onOpenDetails(event);
       }}
       role="button"
-      aria-label={`Voir le détail de l'événement ${event.titre}`}>
+      aria-label={`Voir le détail de l'événement ${event.title || event.titre}`}>
       <div className="relative h-32 w-full rounded-t-xl overflow-hidden">
         <img
-          src={event.imageUrl || "/default-event.jpg"}
-          alt={event.titre}
+          src={getFileUrl(event.image || event.imageUrl) || "/default-event.jpg"}
+          alt={event.title || event.titre}
           className="object-cover w-full h-full transition-transform group-hover:scale-105"
         />
       </div>
       <div className="p-3">
-        <h2 className="text-base font-bold text-lisBlue mb-1">{event.titre}</h2>
+      <h2 className="text-base font-bold text-lisBlue mb-1">{event.title || event.titre}</h2>
         <div className="flex items-center gap-2 mb-1">
           <span className="text-xs text-gray-500">{date}</span>
           <span className="ml-auto px-3 py-0.5 text-xs rounded-full font-semibold bg-blue-100 text-blue-700">
-            {event.categorie}
+          {event.eventType || event.categorie}
           </span>
         </div>
         <p className="text-sm text-gray-700 line-clamp-3 mb-0.5">
           {event.description}
         </p>
-        {event.lieu && (
+        {(event.location || event.lieu) && (
           <div className="text-xs text-gray-500 mt-1 italic">
-            Lieu : {event.lieu}
+            Lieu : {event.location || event.lieu}
           </div>
         )}
         {event.streamingUrl && (

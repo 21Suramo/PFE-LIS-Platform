@@ -11,6 +11,12 @@ export async function getArticlesByTeam(teamId) {
   return data;
 }
 
+export async function getArticleById(id) {
+  const { data } = await api.get(`/articles/${id}`);
+  return data;
+}
+
+
 export async function createArticle(article) {
   const isFormData = article instanceof FormData;
   const { data } = await api.post('/articles', article, {

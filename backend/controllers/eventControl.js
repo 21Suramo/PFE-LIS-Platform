@@ -21,8 +21,11 @@ exports.createEvent = async (req, res) => {
         .json({ message: 'Missing required fields for event creation.' });
     }
 
-    // Get uploaded file path if available
-    const image = req.file ? `/uploads/${req.file.filename}` : "";
+     // Get uploaded file paths if available
+     const imageFile = req.files?.image?.[0];
+     const pdfFile = req.files?.pdf?.[0];
+     const image = imageFile ? `/uploads/${imageFile.filename}` : "";
+     const pdf = pdfFile ? `/uploads/${pdfFile.filename}` : undefined;
 
     const newEvent = new Event({
       title,
@@ -34,6 +37,7 @@ exports.createEvent = async (req, res) => {
       streamingUrl,
       origine,
       image,
+      pdf,
     });
 
     await newEvent.save();
@@ -72,9 +76,12 @@ exports.updateEvent = async (req, res) => {
   try {
     const updateFields = { ...req.body };
 
-    // If a new image is uploaded
-    if (req.file) {
-      updateFields.image = `/uploads/${req.file.filename}`;
+    // If new files are uploaded
+    if (req.files?.image?.[0]) {
+      updateFields.image = `/uploads/${req.files.image[0].filename}`;
+    }
+    if (req.files?.pdf?.[0]) {
+      updateFields.pdf = `/uploads/${req.files.pdf[0].filename}`;
     }
 
     const updatedEvent = await Event.findByIdAndUpdate(

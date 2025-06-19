@@ -1,11 +1,18 @@
 import React, { useState } from "react";
 // import { mockUtilisateurs, mockArticles } from "../../data/mockData";
 import { motion, AnimatePresence } from "framer-motion";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { getFileUrl } from "../../utils/fileUrl";
+import MemberDetailModal from "./MemberDetailModal";
+import ArticleDetail from "../Article/ArticleDetail";
+import { getArticleById } from "../../services/articleService";
 
 export default function TeamDetail({ team }) {
   const [selectedArticle, setSelectedArticle] = useState(null);
+  const [selectedMember, setSelectedMember] = useState(null);
   const [showProjects, setShowProjects] = useState(false);
+  const [currentPage, setCurrentPage] = useState(0);
+  const ARTICLES_PER_PAGE = 2;
 
   // const leader = mockUtilisateurs.find((u) => u.id === team.leaderId);
   // const membres = team.membres
@@ -22,6 +29,23 @@ export default function TeamDetail({ team }) {
     ? [team.article]
     : [];
 
+    async function handleArticleClick(article) {
+      try {
+        const full = await getArticleById(article._id || article.id);
+        setSelectedArticle(full);
+      } catch (err) {
+        console.error(err);
+        setSelectedArticle(article);
+      }
+    }
+  
+
+    const totalPages = Math.ceil(articles.length / ARTICLES_PER_PAGE);
+    const paginatedArticles = articles.slice(
+      currentPage * ARTICLES_PER_PAGE,
+      (currentPage + 1) * ARTICLES_PER_PAGE
+    );
+  
   return (
     <div className="space-y-8">
       {/* En-tête et leader */}
@@ -62,7 +86,9 @@ export default function TeamDetail({ team }) {
             membres.map((member) => (
               <div
               key={member._id || member.id}
-                className="min-w-[180px] bg-gray-100 p-3 rounded shadow-sm flex items-center gap-3">
+                className="min-w-[180px] bg-gray-100 p-3 rounded shadow-sm flex items-center gap-3 cursor-pointer"
+                onClick={() => setSelectedMember(member)}
+              >
                 <img
                   src={getFileUrl(member.avatar)}
                   alt={member.nom}
@@ -82,18 +108,29 @@ export default function TeamDetail({ team }) {
         </div>
       </div>
 
+      <AnimatePresence>
+        {selectedMember && (
+          <MemberDetailModal
+            member={selectedMember}
+            onClose={() => setSelectedMember(null)}
+          />
+        )}
+      </AnimatePresence>
+
+
       {/* Articles : clic = mini-modal */}
       <div>
         <h2 className="text-lg font-semibold text-gray-800 mb-1">
           📄 Articles publiés
         </h2>
-        {articles.length > 0 ? (
-          <ul className="mt-2 space-y-2">
-            {articles.map((article) => (
+        {paginatedArticles.length > 0 ? (
+          <>
+            <ul className="mt-2 space-y-2">
+              {paginatedArticles.map((article) => (
               <li
               key={article._id || article.id}
                 className="bg-white p-3 border rounded shadow-sm text-gray-700 cursor-pointer hover:bg-gray-50 transition"
-                onClick={() => setSelectedArticle(article)}>
+                onClick={() => handleArticleClick(article)}>
                 <p className="font-medium">{article.title}</p>
                 <p className="text-xs text-gray-500 mt-1">
                   📅 {new Date(article.createdAt).toLocaleDateString()}
@@ -106,6 +143,23 @@ export default function TeamDetail({ team }) {
               </li>
             ))}
           </ul>
+            <div className="flex justify-center items-center gap-4 mt-4">
+              <button
+                disabled={currentPage === 0}
+                onClick={() => setCurrentPage((prev) => Math.max(0, prev - 1))}
+                className="p-2 rounded-full bg-gray-200 hover:bg-gray-300 disabled:opacity-50">
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <button
+                disabled={currentPage === totalPages - 1}
+                onClick={() =>
+                  setCurrentPage((prev) => Math.min(totalPages - 1, prev + 1))
+                }
+                className="p-2 rounded-full bg-gray-200 hover:bg-gray-300 disabled:opacity-50">
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </>
         ) : (
           <p className="text-gray-500 italic mt-2">
             Aucun article pour le moment.
@@ -123,7 +177,7 @@ export default function TeamDetail({ team }) {
             exit={{ opacity: 0 }}
             onClick={() => setSelectedArticle(null)}>
             <motion.div
-              className="bg-white rounded-xl shadow-lg max-w-lg w-full p-6 relative"
+              className="bg-white rounded-xl shadow-lg max-w-xl w-full p-6 relative max-h-[80vh] overflow-y-auto"
               initial={{ scale: 0.93, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
@@ -134,20 +188,7 @@ export default function TeamDetail({ team }) {
                 aria-label="Fermer">
                 &times;
               </button>
-              <h3 className="text-xl font-bold">{selectedArticle.title}</h3>
-              <div className="text-xs text-gray-500 mb-2">
-              {new Date(selectedArticle.createdAt).toLocaleDateString()}
-              </div>
-              <div className="mt-2">
-                {selectedArticle.content || selectedArticle.resume}
-              </div>
-              <div className="mt-3 text-sm">
-                Statut :{" "}
-                <span
-                  className={`px-2 py-1 rounded ${selectedArticle.statut === "APPROVED" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}>
-                  {selectedArticle.statut}
-                </span>
-              </div>
+              <ArticleDetail article={selectedArticle} />
             </motion.div>
           </motion.div>
         )}
@@ -170,7 +211,7 @@ export default function TeamDetail({ team }) {
                 exit={{ opacity: 0 }}
                 onClick={() => setShowProjects(false)}>
                 <motion.div
-                  className="bg-white rounded-xl shadow-lg max-w-lg w-full p-8 relative"
+                  className="bg-white rounded-xl shadow-lg max-w-xl w-full p-8 relative"
                   initial={{ scale: 0.93, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   exit={{ scale: 0.95, opacity: 0 }}

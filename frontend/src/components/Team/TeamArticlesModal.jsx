@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 // import { mockArticles } from "../../data/mockData";
 import { motion, AnimatePresence } from "framer-motion";
+import { getArticleById } from "../../services/articleService";
 
 const ARTICLES_PER_PAGE = 6;
 
@@ -38,6 +39,16 @@ export default function TeamArticlesModal({ team, onClose }) {
 
   // Mini-modal article
   const [selectedArticle, setSelectedArticle] = useState(null);
+
+  async function handleArticleClick(article) {
+    try {
+      const full = await getArticleById(article._id || article.id);
+      setSelectedArticle(full);
+    } catch (err) {
+      console.error(err);
+      setSelectedArticle(article);
+    }
+  }
 
   return (
     <AnimatePresence>
@@ -91,7 +102,7 @@ export default function TeamArticlesModal({ team, onClose }) {
                   </div>
                   <button
                     className="mt-2 sm:mt-0 sm:ml-4 text-lisBlue underline text-xs font-semibold"
-                    onClick={() => setSelectedArticle(article)}>
+                    onClick={() => handleArticleClick(article)}>
                     Voir détails
                   </button>
                 </li>
@@ -141,7 +152,7 @@ export default function TeamArticlesModal({ team, onClose }) {
                 exit={{ opacity: 0 }}
                 onClick={() => setSelectedArticle(null)}>
                 <motion.div
-                  className="bg-white rounded-xl shadow-lg max-w-lg w-full p-6 relative"
+                  className="bg-white rounded-xl shadow-lg max-w-xl w-full p-6 relative max-h-[80vh] overflow-y-auto"
                   initial={{ scale: 0.93, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   exit={{ scale: 0.95, opacity: 0 }}

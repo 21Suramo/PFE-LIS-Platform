@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { getFileUrl } from "../../utils/fileUrl";
 
 export default function NewsCard({ item, onOpenDetails }) {
   const date = item.datePublication || item.date || "";
@@ -28,7 +29,7 @@ export default function NewsCard({ item, onOpenDetails }) {
       aria-label={`Voir le détail de l'actualité/événement ${item.titre}`}>
       <div className="relative h-32 w-full rounded-t-xl overflow-hidden">
         <img
-          src={item.imageUrl || "/default-news.jpg"}
+          src={getFileUrl(item.imageUrl) || "/default-news.jpg"}
           alt={item.titre}
           className="object-cover w-full h-full transition-transform group-hover:scale-105"
         />

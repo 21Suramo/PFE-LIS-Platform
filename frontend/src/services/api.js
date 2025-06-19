@@ -2,7 +2,8 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000/api',
+   // backend default port (3000) used in this repository.
+   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000/api',
   headers: { 'Content-Type': 'application/json' },
 });
 

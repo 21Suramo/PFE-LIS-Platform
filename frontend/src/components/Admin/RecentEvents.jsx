@@ -1,3 +1,5 @@
+import { formatDate } from "../../utils/date";
+
 export default function RecentEvents({ events }) {
   return (
     <div className="bg-white/80 rounded-2xl shadow p-5">
@@ -11,7 +13,7 @@ export default function RecentEvents({ events }) {
             className="flex justify-between py-1 border-b last:border-b-0">
             <span>{ev.titre}</span>
             <span className="text-xs px-2 rounded bg-blue-100 text-blue-700">
-              {ev.date}
+            {formatDate(ev.date)}
             </span>
           </li>
         ))}

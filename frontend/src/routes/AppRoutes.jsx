@@ -94,7 +94,7 @@ export default function AppRoutes() {
         <Route
           path="/MemberPanelPage"
           element={
-            <PrivateRoute roles={["MEMBRE", "RESPONSABLE"]}>
+            <PrivateRoute roles={["MEMBRE", "RESPONSABLE", "DIRECTEUR"]}>
               <Suspense fallback={<FullPageSpinner />}>
                 <PageTransition>
                   <MemberPanelPage />

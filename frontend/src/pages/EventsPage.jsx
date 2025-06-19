@@ -12,7 +12,7 @@ export default function EventsPage() {
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [events, setEvents] = useState([]);
   const [search, setSearch] = useState("");
-  const [filterCategorie, setFilterCategorie] = useState(""); // ex. "Conférence en ligne"
+  const [filterCategorie, setFilterCategorie] = useState(""); // ex. "Conférence"
   const [filterLieu, setFilterLieu] = useState("");
   const [sortBy, setSortBy] = useState("date");
   const [page, setPage] = useState(1);
@@ -25,25 +25,26 @@ export default function EventsPage() {
   }, []);
 
   const data = useMemo(
-    // () => mockEvenements.filter((e) => e.origine === "INTERNE"),
-    // []
-    () => events.filter((e) => e.origine === "INTERNE"),
+    // The backend stores the origin as "LIS" for internal events.
+    () => events.filter((e) => e.origine === "LIS"),
     [events]
   );
 
   // Catégories et lieux uniques pour filtres
   const categories = Array.from(
-    new Set(data.map((e) => e.categorie).filter(Boolean))
+    new Set(data.map((e) => e.eventType).filter(Boolean))
   );
-  const lieux = Array.from(new Set(data.map((e) => e.lieu).filter(Boolean)));
+  const lieux = Array.from(new Set(data.map((e) => e.location).filter(Boolean)));
 
   // 2. Recherche, filtre
   let filtered = data
-    .filter((event) => !filterCategorie || event.categorie === filterCategorie)
-    .filter((event) => !filterLieu || event.lieu === filterLieu)
+    .filter((event) => !filterCategorie || event.eventType === filterCategorie)
+    .filter((event) => !filterLieu || event.location === filterLieu)
     .filter(
       (event) =>
-        event.titre.toLowerCase().includes(search.toLowerCase()) ||
+        (event.title || event.titre)
+          .toLowerCase()
+          .includes(search.toLowerCase()) ||
         (event.description?.toLowerCase() || "").includes(search.toLowerCase())
     );
 
@@ -52,7 +53,7 @@ export default function EventsPage() {
   if (sortBy === "date") {
     sorted.sort((a, b) => new Date(b.date) - new Date(a.date));
   } else if (sortBy === "lieu") {
-    sorted.sort((a, b) => (a.lieu || "").localeCompare(b.lieu || ""));
+    sorted.sort((a, b) => (a.location || "").localeCompare(b.location || ""));
   }
 
   // 4. Pagination

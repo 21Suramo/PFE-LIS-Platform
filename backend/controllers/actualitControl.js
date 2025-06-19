@@ -1,6 +1,6 @@
 const Actualite = require('../modules/actualite');
 
-// ✅ Create
+//  Create
 exports.createActualite = async (req, res) => {
   try {
     const { titre, contenu, datePublication, pinned } = req.body;
@@ -9,7 +9,10 @@ exports.createActualite = async (req, res) => {
       return res.status(400).json({ message: 'Titre et contenu sont requis.' });
     }
 
-    const imageUrl = req.file ? `/uploads/${req.file.filename}` : "";
+    const imageFile = req.files?.image?.[0];
+    const pdfFile = req.files?.pdf?.[0];
+    const imageUrl = imageFile ? `/uploads/${imageFile.filename}` : "";
+    const pdf = pdfFile ? `/uploads/${pdfFile.filename}` : undefined;
 
     const actualite = new Actualite({
       titre,
@@ -17,6 +20,7 @@ exports.createActualite = async (req, res) => {
       datePublication: datePublication || new Date(),
       pinned: pinned === "true", // FormData sends booleans as strings
       imageUrl,
+      pdf,
     });
 
     await actualite.save();
@@ -27,7 +31,7 @@ exports.createActualite = async (req, res) => {
   }
 };
 
-// ✅ Get all
+//  Get all
 exports.getAllActualites = async (req, res) => {
   try {
     const actualites = await Actualite.find().sort({ datePublication: -1 });
@@ -37,7 +41,7 @@ exports.getAllActualites = async (req, res) => {
   }
 };
 
-// ✅ Get one
+//  Get one
 exports.getActualiteById = async (req, res) => {
   try {
     const actualite = await Actualite.findById(req.params.id);
@@ -48,11 +52,14 @@ exports.getActualiteById = async (req, res) => {
   }
 };
 
-// ✅ Update
+//  Update
 exports.updateActualite = async (req, res) => {
   try {
     const { titre, contenu, datePublication, pinned } = req.body;
-    const imageUrl = req.file ? `/uploads/${req.file.filename}` : undefined;
+    const imageFile = req.files?.image?.[0];
+    const pdfFile = req.files?.pdf?.[0];
+    const imageUrl = imageFile ? `/uploads/${imageFile.filename}` : undefined;
+    const pdf = pdfFile ? `/uploads/${pdfFile.filename}` : undefined;
 
     const updatedFields = {
       titre,
@@ -63,6 +70,10 @@ exports.updateActualite = async (req, res) => {
 
     if (imageUrl) {
       updatedFields.imageUrl = imageUrl;
+    }
+
+    if (pdf) {
+      updatedFields.pdf = pdf;
     }
 
     const updated = await Actualite.findByIdAndUpdate(
@@ -80,7 +91,7 @@ exports.updateActualite = async (req, res) => {
   }
 };
 
-// ✅ Delete
+//  Delete
 exports.deleteActualite = async (req, res) => {
   try {
     const deleted = await Actualite.findByIdAndDelete(req.params.id);

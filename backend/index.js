@@ -38,7 +38,7 @@ const createDefaultDirector = async () => {
 // --- End of function ---
 
 // MongoDB Connection
-mongoose.connect(process.env.MONGODB_URI || "mongodb+srv://abdelouahidaitsi:8XODIpvmPhoFqNQV@cluster0.wfdgilz.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
+mongoose.connect(process.env.MONGODB_URI || "mongodb+srv://abdelouahed:test1999@cluster0.fwtg2nx.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
   .then(() => {
     console.log('MongoDB connected');
     // Call the function to create the default Director account after successful connection

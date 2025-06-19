@@ -200,7 +200,9 @@ export default function Sidebar({ id, isOpen, onClose }) {
                   {!collapsed && <span>Responsable</span>}
                 </NavLink>
               )}
-              {(user?.role === "MEMBRE" || user?.role === "RESPONSABLE") && (
+              {(user?.role === "MEMBRE" ||
+                user?.role === "RESPONSABLE" ||
+                user?.role === "DIRECTEUR") && (
                 <NavLink
                   to="/MemberPanelPage"
                   className="flex items-center gap-3 px-3 py-2 rounded-md transition-all text-base dark:text-white hover:bg-[var(--color-accent)]/10 hover:text-[var(--color-primary)]"
@@ -259,24 +261,24 @@ export default function Sidebar({ id, isOpen, onClose }) {
                           onClick={onClose}>
                           Événements
                         </NavLink>
-                        <NavLink
+                        {/*<NavLink
                           to="/admin/articles"
                           className="flex items-center gap-3 px-3 py-2 rounded-md transition-all text-base dark:text-white hover:bg-[var(--color-accent)]/10 hover:text-[var(--color-primary)]"
                           onClick={onClose}>
                           Articles
-                        </NavLink>
+                        </NavLink>*/}
                         <NavLink
                           to="/admin/news"
                           className="flex items-center gap-3 px-3 py-2 rounded-md transition-all text-base dark:text-white hover:bg-[var(--color-accent)]/10 hover:text-[var(--color-primary)]"
                           onClick={onClose}>
                           Actualités
                         </NavLink>
-                        <NavLink
+                        {/*<NavLink
                           to="/admin/panel"
                           className="flex items-center gap-3 px-3 py-2 rounded-md transition-all text-base dark:text-white hover:bg-[var(--color-accent)]/10 hover:text-[var(--color-primary)]"
                           onClick={onClose}>
                           ControlPanel
-                        </NavLink>
+                        </NavLink>*/}
                       </motion.div>
                     )}
                   </AnimatePresence>

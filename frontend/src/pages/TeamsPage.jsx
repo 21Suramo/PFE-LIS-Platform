@@ -20,33 +20,32 @@ export default function TeamsPage() {
   }, []);
 
   return (
-    <div className="px-4 sm:px-6 lg:px-12 py-12">
-      <div className="max-w-7xl mx-auto">
+    <Layout>
+      <div className="h-full overflow-hidden w-full max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col">
         <SectionTitle
           icon={<UsersIcon className="w-6 h-6 text-lisBlue" />}
           title="Nos équipes de recherche"
           subtitle="Découvrez les pôles d’expertise qui font vivre le laboratoire."
         />
-        <TeamList
-          teams={teams}
-          onOpenDetails={(team) => setSelectedTeam(team)}
-        />
+        <div className="flex-1 overflow-y-auto mt-4 pb-2">
+          <TeamList teams={teams} onOpenDetails={setSelectedTeam} />
+        </div>
 
         {/* MODAL animé pour les détails */}
         <AnimatePresence>
           {selectedTeam && (
             <motion.div
-              className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center"
+              className="fixed inset-0 bg-black/50 z-[1000] flex items-center justify-center p-4"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setSelectedTeam(null)}>
               <motion.div
-                className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-8 relative"
-                initial={{ scale: 0.93, opacity: 0 }}
+                className="bg-white rounded-2xl shadow-xl max-w-5xl w-full p-6 sm:p-8 relative max-h-[90vh] overflow-y-auto"
+                initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.95, opacity: 0 }}
-                transition={{ type: "spring", duration: 0.23 }}
+                transition={{ type: "spring", stiffness: 300, damping: 25 }}
                 onClick={(e) => e.stopPropagation()}>
                 <button
                   onClick={() => setSelectedTeam(null)}
@@ -60,7 +59,7 @@ export default function TeamsPage() {
           )}
         </AnimatePresence>
       </div>
-    </div>
+      </Layout>
   );
 }
 

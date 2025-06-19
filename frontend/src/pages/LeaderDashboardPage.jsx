@@ -14,6 +14,8 @@ import {
   returnArticleToPending,
 } from "../services/articleService";
 
+import ArticleDetail from "../components/Article/ArticleDetail";
+
 
 // -----------------------------------------------------------------------Pagination utilitaire
 function paginate(array, pageSize, pageNumber) {
@@ -133,13 +135,17 @@ export default function LeaderDashboardPage() {
       }
     }, [team, articles]);
   
-    const availableUsers = users.filter(
-    (u) =>
-      // !teamMembers.some((m) => m.id === u.id) &&
-      // u.id !== leader?.id &&
-      !teamMembers.some((m) => m._id === u._id) &&
-      u._id !== leader?._id
-  );
+    const availableUsers = users.filter((u) => {
+      if (teamMembers.some((m) => m._id === u._id)) return false;
+      if (u._id === leader?._id) return false;
+      const inOther = teams.some(
+        (t) =>
+          t._id !== team?._id &&
+          ((t.leader && t.leader._id === u._id) ||
+            (t.membres || []).some((m) => m._id === u._id))
+      );
+      return !inOther;
+    });
 
   // ---------------------------------------------------------------------Recherche membres
   const [searchMember, setSearchMember] = useState("");
@@ -187,6 +193,7 @@ export default function LeaderDashboardPage() {
 
   // ----------------------------------------------------------------------------MODAL état
   const [modalOpen, setModalOpen] = useState(false);
+  const [selectedArticle, setSelectedArticle] = useState(null);
 
   // ----------------------------------------------------------------------ARTICLES LOGIC
   // function handleApproveArticle(id) {
@@ -200,6 +207,7 @@ export default function LeaderDashboardPage() {
       setAllArticles((prev) =>
         prev.map((a) => (a._id === id ? { ...a, statut: "APPROVED" } : a))
       );
+      window.dispatchEvent(new Event("articlesUpdated"));
     } catch (err) {
       console.error("Error approving article:", err);
     }
@@ -212,6 +220,7 @@ export default function LeaderDashboardPage() {
     try {
       await deleteArticle(id);
       setAllArticles((prev) => prev.filter((a) => a._id !== id));
+      window.dispatchEvent(new Event("articlesUpdated"));
     } catch (err) {
       console.error("Error deleting article:", err);
     }
@@ -231,6 +240,7 @@ export default function LeaderDashboardPage() {
         prev.map((a) => (a._id === id ? { ...a, statut: "PENDING" } : a))
       );
       setTab("PENDING");
+      window.dispatchEvent(new Event("articlesUpdated"));
     } catch (err) {
       console.error("Error returning article to pending:", err);
     }
@@ -480,7 +490,9 @@ export default function LeaderDashboardPage() {
                         {article.titre}
                       </h3>
                       <p className="text-sm text-gray-600">
-                        Auteur : {article.auteur || "—"}
+                      Auteur :
+                        {" "}
+                        {article.author?.nom || article.author || article.auteur || "—"}
                       </p>
                       <p
                         className={`text-sm ${
@@ -492,6 +504,12 @@ export default function LeaderDashboardPage() {
                       </p>
                     </div>
                     <div className="flex flex-col gap-2">
+                    <motion.button
+                        whileTap={{ scale: 0.92 }}
+                        onClick={() => setSelectedArticle(article)}
+                        className="bg-blue-600 text-white py-1 px-3 rounded hover:bg-blue-800 transition shadow text-sm font-semibold">
+                        Voir
+                      </motion.button>
                       {tab === "PENDING" && (
                         <motion.button
                           whileTap={{ scale: 0.92, rotate: -6 }}
@@ -532,6 +550,32 @@ export default function LeaderDashboardPage() {
             </p>
           )}
         </section>
+        <AnimatePresence>
+          {selectedArticle && (
+            <motion.div
+              className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSelectedArticle(null)}>
+              <motion.div
+                className="bg-white rounded-2xl shadow-2xl max-w-xl w-full p-8 relative"
+                initial={{ scale: 0.93, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.95, opacity: 0 }}
+                transition={{ type: 'spring', duration: 0.23 }}
+                onClick={(e) => e.stopPropagation()}>
+                <button
+                  onClick={() => setSelectedArticle(null)}
+                  className="absolute top-4 right-4 text-gray-500 hover:text-lisBlue text-2xl font-bold"
+                  aria-label="Fermer">
+                  &times;
+                </button>
+                <ArticleDetail article={selectedArticle} />
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </Layout>
   );

@@ -13,7 +13,9 @@ const userSchema = new mongoose.Schema({
     default: 'MEMBRE'
   },
   avatar: { type: String, required: false },
-  speciality: { type: String, required: false }
+  speciality: { type: String, required: false },
+  link1: { type: String, required: false },
+  link2: { type: String, required: false }
 });
 
 // Create the User model using the schema

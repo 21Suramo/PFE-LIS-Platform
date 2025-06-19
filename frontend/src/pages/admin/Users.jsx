@@ -83,6 +83,8 @@ export default function Users() {
         role: userData.role,
         avatar: userData.avatar,
         speciality: userData.speciality,
+        link1: userData.link1,
+        link2: userData.link2,
       };
       const { user } = await createUser(payload);
       setUsers((prev) => [...prev, user]);
@@ -109,6 +111,8 @@ export default function Users() {
         role: userData.role,
         avatar: userData.avatar,
         speciality: userData.speciality,
+        link1: userData.link1,
+        link2: userData.link2,
       };
       const { user } = await updateUser(id, payload);
       setUsers((prev) => prev.map((u) => (u._id === id ? user : u)));

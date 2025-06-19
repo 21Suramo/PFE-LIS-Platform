@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import LoginModal from "./LoginModal";
+import ChangePasswordModal from "./ChangePasswordModal";
 import Sidebar from "./Sidebar";
 import logo from "../../assets/images/logo.png";
 import Button from "./Button";
@@ -10,6 +11,7 @@ import Button from "./Button";
 export default function Header() {
   const { user, logout } = useAuth();
   const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const [isChangePwOpen, setIsChangePwOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   // Fermer modal ou sidebar au ESC
@@ -18,6 +20,7 @@ export default function Header() {
       if (e.key === "Escape") {
         setIsMenuOpen(false);
         setIsLoginOpen(false);
+        setIsChangePwOpen(false);
       }
     };
     window.addEventListener("keydown", handleEsc);
@@ -87,13 +90,29 @@ export default function Header() {
       />
 
       {/* Modal de connexion */}
-      <LoginModal isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
+      {/* <LoginModal isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} /> */}
+      <LoginModal
+        isOpen={isLoginOpen}
+        onClose={() => setIsLoginOpen(false)}
+        onChangePassword={() => setIsChangePwOpen(true)}
+      />
+      {/* Modal changement mot de passe */}
+      <ChangePasswordModal
+        isOpen={isChangePwOpen}
+        onClose={() => setIsChangePwOpen(false)}
+      />
 
-      {/* Overlay uniquement pour la modal de login */}
-      {isLoginOpen && (
+      {/* Overlay uniquement pour la modal de login
+      {isLoginOpen && ( */}
+      {/* Overlay uniquement pour les modales */}
+      {(isLoginOpen || isChangePwOpen) && (
         <div
           className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
-          onClick={() => setIsLoginOpen(false)}
+          // onClick={() => setIsLoginOpen(false)}
+          onClick={() => {
+            setIsLoginOpen(false);
+            setIsChangePwOpen(false);
+          }}
         />
       )}
     </>

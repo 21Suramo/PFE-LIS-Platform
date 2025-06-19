@@ -5,7 +5,7 @@ const Team = require('../modules/team');
 // Create new article
 exports.createArticle = async (req, res) => {
   try {
-    const { title, content, resume, equipe } = req.body;
+    const { title, content, resume, equipe, link } = req.body;
     const pdf = req.file ? `/uploads/${req.file.filename}` : undefined;
     const pdfName = req.file ? req.file.originalname : undefined;
 
@@ -35,6 +35,7 @@ exports.createArticle = async (req, res) => {
       statut: 'PENDING',
       pdf,
       pdfName,
+      link,
     });
 
     team.articles = team.articles || [];

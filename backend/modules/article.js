@@ -9,6 +9,7 @@ const articleSchema = new mongoose.Schema({
   resume: { type: String, required: false },
   pdf: { type: String, required: false },
   pdfName: { type: String, required: false },
+  link: { type: String, required: false },
   author: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   createdAt: { type: Date, default: Date.now },// Date when the article was created, defaults to the current date
     statut: {
