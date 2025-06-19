@@ -1,9 +1,10 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import Layout from "../components/common/Layout";
+import { ArrowLeft } from "lucide-react";
 import TeamDetail from "../components/Team/TeamDetail";
 // import { mockEquipes } from "../data/mockData";
 import { getTeamById } from "../services/teamService";
-import { AnimatePresence, motion } from "framer-motion";
 
 export default function TeamDetailPage() {
   const { id } = useParams();
@@ -23,40 +24,31 @@ export default function TeamDetailPage() {
   }, [id]);
 
   if (error) {
-    return <div className="py-12 text-center text-gray-500">{error}</div>;
+    return (
+      <Layout>
+        <div className="py-12 text-center text-gray-500">{error}</div>
+      </Layout>
+    );
   }
 
   if (!team) {
-    // return (
-    //   <div className="py-12 text-center text-gray-500">Équipe introuvable.</div>
-    // );
-    return <div className="py-12 text-center text-gray-500">Chargement...</div>;
+    return (
+      <Layout>
+        <div className="py-12 text-center text-gray-500">Chargement...</div>
+      </Layout>
+    );
   }
 
   return (
-    <AnimatePresence>
-      <motion.div
-        className="fixed inset-0 bg-black/50 z-[1000] flex items-center justify-center p-4"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        onClick={() => navigate('/teams')}>
-        <motion.div
-          className="bg-white rounded-2xl shadow-xl max-w-5xl w-full p-6 sm:p-8 relative max-h-[90vh] overflow-y-auto"
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.95, opacity: 0 }}
-          transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-          onClick={(e) => e.stopPropagation()}>
-          <button
-            onClick={() => navigate('/teams')}
-            className="absolute top-4 right-4 text-gray-500 hover:text-lisBlue text-2xl font-bold"
-            aria-label="Fermer">
-            &times;
-          </button>
-          <TeamDetail team={team} />
-        </motion.div>
-      </motion.div>
-    </AnimatePresence>
+    <Layout>
+      <div className="px-4 sm:px-6 lg:px-8 py-6">
+        <button
+          onClick={() => navigate(-1)}
+          className="text-lisBlue mb-4 underline">
+          &larr; Retour
+        </button>
+        <TeamDetail team={team} />
+      </div>
+    </Layout>
   );
 }

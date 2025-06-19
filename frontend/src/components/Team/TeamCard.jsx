@@ -1,19 +1,29 @@
 // import { mockUtilisateurs } from "../../data/mockData";
 import { motion } from "framer-motion";
 import { getFileUrl } from "../../utils/fileUrl";
+import { useNavigate } from "react-router-dom";
 
 export default function TeamCard({ team, onOpenDetails, ...rest }) {
+  const navigate = useNavigate();
   // const leader = mockUtilisateurs.find((u) => u.id === team.leaderId);
   const leader = team.leader;
+
+  const handleOpen = () => {
+    if (onOpenDetails) {
+      onOpenDetails(team);
+    } else {
+      navigate(`/teams/${team._id || team.id}`);
+    }
+  };
 
   return (
     <motion.div
       className="relative rounded-2xl overflow-hidden shadow-xl bg-white/70 backdrop-blur-md border border-gray-100 group transition cursor-pointer"
       whileHover={{ scale: 1.04, boxShadow: "0 8px 40px #003e7433" }}
-      onClick={() => onOpenDetails && onOpenDetails(team)}
+      onClick={handleOpen}
       tabIndex={0}
       onKeyDown={(e) => {
-        if (e.key === "Enter") onOpenDetails && onOpenDetails(team);
+        if (e.key === "Enter") handleOpen();
       }}
       role="button"
       aria-label={`Voir le détail de l'équipe ${team.name}`}>

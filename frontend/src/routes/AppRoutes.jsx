@@ -14,7 +14,7 @@ const NewsPage = lazy(() => import("../pages/NewsPage"));
 const EventsPage = lazy(() => import("../pages/EventsPage"));
 const MemberPanelPage = lazy(() => import("../pages/MemberPanelPage"));
 const LeaderDashboard = lazy(() => import("../pages/LeaderDashboardPage"));
-const AdminDashboard = lazy(() => import("../pages/admin/Dashboard"));
+const AdminDashboard = lazy(() => import("../pages/AdminDashboardPage"));
 const AdminUsers = lazy(() => import("../pages/admin/Users"));
 const AdminTeams = lazy(() => import("../pages/admin/Teams"));
 const AdminEvents = lazy(() => import("../pages/admin/Events"));

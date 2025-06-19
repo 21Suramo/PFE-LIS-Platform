@@ -7,7 +7,7 @@ export default function RecentArticles({ articles }) {
           <li
             key={article.id}
             className="flex justify-between py-1 border-b last:border-b-0">
-            <span>{article.titre}</span>
+            <span>{article.title || article.titre}</span>
             <span
               className={`text-xs px-2 rounded ${article.statut === "APPROVED" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}>
               {article.statut}

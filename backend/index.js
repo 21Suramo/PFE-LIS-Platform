@@ -54,6 +54,7 @@ app.use('/api/articles', require('./routes/articleRoutes'));
 app.use('/api/projects', require('./routes/projectRoutes'));
 // app.use('/api/conferences', require('./routes/conferRountes')); // This was removed in previous steps
 app.use('/api/events', require('./routes/eventsRoutes'));
+app.use('/api/dashboard', require('./routes/dashboardRoutes'));
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/teams', require('./routes/teamRoutes'));
 app.use('/api/users', require('./routes/userRoutes'));

@@ -11,7 +11,7 @@ export default function RecentEvents({ events }) {
           <li
             key={ev.id}
             className="flex justify-between py-1 border-b last:border-b-0">
-            <span>{ev.titre}</span>
+            <span>{ev.title || ev.titre}</span>
             <span className="text-xs px-2 rounded bg-blue-100 text-blue-700">
             {formatDate(ev.date)}
             </span>

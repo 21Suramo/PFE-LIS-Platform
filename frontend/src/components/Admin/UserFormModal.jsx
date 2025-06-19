@@ -76,7 +76,7 @@ export default function UserFormModal({
               exit={{ scale: 0.8, opacity: 0 }}
               transition={{ type: "spring", stiffness: 200, damping: 25 }}
               onClick={(e) => e.stopPropagation()}>
-               <div className="max-h-[80vh] overflow-y-auto p-6 relative">
+               <div className="max-h-[71vh] overflow-y-auto p-6 relative">
                 {/* close */}
                 <button
                   aria-label="Fermer"

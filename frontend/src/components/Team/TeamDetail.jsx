@@ -29,6 +29,11 @@ export default function TeamDetail({ team }) {
     ? [team.article]
     : [];
 
+    // Show only approved articles
+  const approvedArticles = articles.filter(
+    (article) => article.statut === "APPROVED"
+  );
+
     async function handleArticleClick(article) {
       try {
         const full = await getArticleById(article._id || article.id);
@@ -40,14 +45,15 @@ export default function TeamDetail({ team }) {
     }
   
 
-    const totalPages = Math.ceil(articles.length / ARTICLES_PER_PAGE);
-    const paginatedArticles = articles.slice(
+    const totalPages = Math.ceil(approvedArticles.length / ARTICLES_PER_PAGE);
+    const paginatedArticles = approvedArticles.slice(
       currentPage * ARTICLES_PER_PAGE,
       (currentPage + 1) * ARTICLES_PER_PAGE
     );
   
   return (
-    <div className="space-y-8">
+    <div className="fixed inset-0 z-[9999] bg-white overflow-y-auto p-6">
+    <div className="space-y-8 max-w-6xl mx-auto">
       {/* En-tête et leader */}
       <div className="text-center">
         <img
@@ -238,6 +244,7 @@ export default function TeamDetail({ team }) {
           </AnimatePresence>
         </div>
       )}
+    </div>
     </div>
   );
 }
